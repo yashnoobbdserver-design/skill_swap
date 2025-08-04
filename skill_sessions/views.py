@@ -448,13 +448,18 @@ def cancel_session(request, pk):
     )
     
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        return JsonResponse({'success': True, 'message': 'Session cancelled successfully'})
-    return redirect('skill_sessions:session_list')
+        return JsonResponse({'success': True, 'message': 'Session cancelled successfully', 'redirect_to_received': True})
+    return redirect('skill_sessions:request_management')
 
 
 @login_required
 def start_session_simple(request, pk):
     session = get_object_or_404(SkillSwapSession, pk=pk)
+    
+    # Only the teacher can start the session
+    if request.user != session.teacher:
+        return redirect('skill_sessions:session_detail', pk=pk)
+    
     session.status = 'in_progress'
     session.started_at = timezone.now()
     session.save()
@@ -464,9 +469,19 @@ def start_session_simple(request, pk):
 @login_required
 def end_session(request, pk):
     session = get_object_or_404(SkillSwapSession, pk=pk)
+    
+    # Only the teacher can end the session
+    if request.user != session.teacher:
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'success': False, 'error': 'Only the teacher can end the session'})
+        return redirect('skill_sessions:session_detail', pk=pk)
+    
     session.status = 'completed'
     session.ended_at = timezone.now()
     session.save()
+    
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({'success': True, 'message': 'Session ended successfully'})
     return redirect('skill_sessions:session_detail', pk=pk)
 
 
@@ -474,16 +489,30 @@ class SessionReviewCreateView(LoginRequiredMixin, CreateView):
     model = SessionReview
     form_class = SessionReviewForm
     template_name = 'skill_sessions/review_form.html'
-    success_url = reverse_lazy('skill_sessions:session_list')
+    success_url = reverse_lazy('skill_sessions:request_management')
+    
+    def dispatch(self, request, *args, **kwargs):
+        session = get_object_or_404(SkillSwapSession, pk=self.kwargs['session_id'])
+        
+        # Only learners can leave reviews
+        if request.user != session.learner:
+            messages.error(request, 'Only learners can leave reviews for sessions.')
+            return redirect('skill_sessions:request_management')
+        
+        # Check if user has already reviewed this session
+        if session.reviews.filter(reviewer=request.user).exists():
+            messages.info(request, 'You have already reviewed this session.')
+            return redirect('skill_sessions:request_management')
+        
+        return super().dispatch(request, *args, **kwargs)
     
     def form_valid(self, form):
         session = get_object_or_404(SkillSwapSession, pk=self.kwargs['session_id'])
         form.instance.session = session
         form.instance.reviewer = self.request.user
-        if self.request.user == session.teacher:
-            form.instance.reviewee = session.learner
-        else:
-            form.instance.reviewee = session.teacher
+        form.instance.reviewee = session.teacher  # Learner always reviews the teacher
+        
+        messages.success(self.request, 'Thank you for your review!')
         return super().form_valid(form)
 
 
@@ -743,11 +772,11 @@ def session_requests_management(request):
         requester=request.user
     ).select_related('recipient', 'offered_skill', 'offered_skill__skill').order_by('-created_at')
     
-    # Get scheduled and cancelled sessions
+    # Get scheduled and cancelled sessions (LIFO order - most recent first)
     scheduled_sessions = SkillSwapSession.objects.filter(
         models.Q(teacher=request.user) | models.Q(learner=request.user),
         status__in=['scheduled', 'cancelled']
-    ).select_related('teacher', 'learner', 'skill').order_by('scheduled_date')
+    ).select_related('teacher', 'learner', 'skill').order_by('-created_at')
     
     # Get completed sessions for history
     completed_sessions = SkillSwapSession.objects.filter(
@@ -986,11 +1015,11 @@ def start_session(request, session_id):
             status='scheduled'
         )
         
-        # Check if user is participant
-        if request.user not in [session.teacher, session.learner]:
+        # Check if user is the teacher (only teachers can start sessions)
+        if request.user != session.teacher:
             return JsonResponse({
                 'success': False, 
-                'error': 'You are not a participant in this session'
+                'error': 'Only the teacher can start the session'
             })
         
         # Check if session can be started (within time window)
