@@ -417,7 +417,7 @@ class TrendingSkillsMoreView(LoginRequiredMixin, ListView):
     model = Skill
     template_name = 'skills/trending_skills_more.html'
     context_object_name = 'trending_skills'
-    paginate_by = 20
+    paginate_by = 10
     
     def get_queryset(self):
         from django.db.models import Count

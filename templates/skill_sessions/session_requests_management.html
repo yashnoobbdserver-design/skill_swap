@@ -363,12 +363,7 @@
                                     </div>
                                     
                                     <div class="mt-4 lg:mt-0 lg:ml-6 flex flex-col space-y-2">
-                                        {% if session.status == 'cancelled' %}
-                                            <a href="{% url 'skill_sessions:reschedule_session' session.id %}" 
-                                               class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-200 font-semibold text-center">
-                                                <i class="fas fa-calendar-plus mr-2"></i>Reschedule Session
-                                            </a>
-                                        {% elif session.status == 'scheduled' %}
+                                        {% if session.status == 'scheduled' %}
                                             {% if session.can_start %}
                                                 <button class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition duration-200 font-semibold"
                                                         onclick="startSession({{ session.id }})">
