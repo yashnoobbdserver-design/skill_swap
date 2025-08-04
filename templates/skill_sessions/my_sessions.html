@@ -174,10 +174,6 @@
                                 </a>
                                 
                                 {% if session.teacher == user or session.learner == user %}
-                                    <button class="bg-yellow-600 text-white px-4 py-2 rounded-lg hover:bg-yellow-700 transition duration-200"
-                                            onclick="rescheduleSession({{ session.id }})" title="Reschedule">
-                                        <i class="fas fa-calendar-alt"></i>
-                                    </button>
                                     <button class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition duration-200"
                                             onclick="cancelSession({{ session.id }})" title="Cancel Session">
                                         <i class="fas fa-times"></i>
@@ -515,10 +511,7 @@ function startSession(sessionId) {
     });
 }
 
-function rescheduleSession(sessionId) {
-    // This would open a modal or redirect to reschedule page
-    window.location.href = `/sessions/${sessionId}/reschedule/`;
-}
+
 
 function cancelSession(sessionId) {
     if (confirm('Are you sure you want to cancel this session?')) {
