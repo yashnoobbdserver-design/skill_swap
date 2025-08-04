@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Session History | Campus Skill-Swap{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="flex items-center justify-between mb-6">
+            <h1 class="text-3xl font-bold text-gray-800">
+                <i class="fas fa-history mr-3 text-blue-600"></i>Session History
+            </h1>
+            <a href="{% url 'skill_sessions:my_sessions' %}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
+                <i class="fas fa-arrow-left mr-2"></i>Back to Sessions
+            </a>
+        </div>
+
+        {% if sessions %}
+            <div class="space-y-4">
+                {% for session in sessions %}
+                    <div class="border rounded-lg p-4 hover:shadow-md transition-shadow">
+                        <div class="flex items-center justify-between">
+                            <div class="flex-1">
+                                <div class="flex items-center space-x-4">
+                                    <div class="flex-shrink-0">
+                                        <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                                            <i class="fas fa-graduation-cap text-blue-600"></i>
+                                        </div>
+                                    </div>
+                                    <div class="flex-1">
+                                        <h3 class="text-xl font-semibold text-gray-800">{{ session.skill.name }}</h3>
+                                        <div class="text-gray-600 mt-1">
+                                            {% if session.teacher == user %}
+                                                <span class="text-green-600 font-medium">You taught</span>
+                                                {{ session.learner.get_full_name|default:session.learner.username }}
+                                            {% else %}
+                                                <span class="text-blue-600 font-medium">You learned from</span>
+                                                {{ session.teacher.get_full_name|default:session.teacher.username }}
+                                            {% endif %}
+                                        </div>
+                                        <div class="flex items-center space-x-4 mt-2 text-sm text-gray-500">
+                                            <span><i class="far fa-calendar mr-1"></i>{{ session.scheduled_date|date:"M d, Y" }}</span>
+                                            <span><i class="far fa-clock mr-1"></i>{{ session.scheduled_date|time:"g:i A" }}</span>
+                                            <span><i class="fas fa-hourglass-half mr-1"></i>{{ session.duration_minutes }} minutes</span>
+                                            <span class="capitalize">
+                                                <i class="fas fa-{{ session.format|yesno:'desktop,map-marker-alt' }} mr-1"></i>
+                                                {{ session.format|capfirst }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-3">
+                                <span class="status-badge status-{{ session.status }} px-3 py-1 rounded-full text-sm font-medium">
+                                    {{ session.get_status_display }}
+                                </span>
+                                <a href="{% url 'skill_sessions:session_detail' session.id %}" 
+                                   class="text-blue-600 hover:text-blue-800 font-medium">
+                                    View Details
+                                </a>
+                            </div>
+                        </div>
+                        
+                        {% if session.session_summary %}
+                            <div class="mt-4 pt-4 border-t border-gray-200">
+                                <h4 class="font-medium text-gray-800 mb-2">Session Summary:</h4>
+                                <p class="text-gray-600">{{ session.session_summary }}</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+
+            <!-- Pagination if needed -->
+            {% if is_paginated %}
+                <div class="mt-8 flex justify-center">
+                    <nav class="flex space-x-2">
+                        {% if page_obj.has_previous %}
+                            <a href="?page=1" class="px-3 py-2 bg-white border rounded-lg hover:bg-gray-50">First</a>
+                            <a href="?page={{ page_obj.previous_page_number }}" class="px-3 py-2 bg-white border rounded-lg hover:bg-gray-50">Previous</a>
+                        {% endif %}
+                        
+                        <span class="px-3 py-2 bg-blue-600 text-white rounded-lg">
+                            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                        </span>
+                        
+                        {% if page_obj.has_next %}
+                            <a href="?page={{ page_obj.next_page_number }}" class="px-3 py-2 bg-white border rounded-lg hover:bg-gray-50">Next</a>
+                            <a href="?page={{ page_obj.paginator.num_pages }}" class="px-3 py-2 bg-white border rounded-lg hover:bg-gray-50">Last</a>
+                        {% endif %}
+                    </nav>
+                </div>
+            {% endif %}
+        {% else %}
+            <div class="text-center py-12">
+                <div class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-history text-gray-400 text-3xl"></i>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-800 mb-2">No Session History</h3>
+                <p class="text-gray-600 mb-6">You haven't completed any sessions yet.</p>
+                <a href="{% url 'skills:skill_list' %}" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors">
+                    <i class="fas fa-search mr-2"></i>Find Skills to Learn
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+.status-badge.status-completed { background-color: #D1FAE5; color: #065F46; }
+.status-badge.status-cancelled { background-color: #F3F4F6; color: #6B7280; }
+.status-badge.status-no-show { background-color: #FEE2E2; color: #991B1B; }
+</style>
+{% endblock %}

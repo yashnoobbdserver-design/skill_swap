@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Add Desired Skill | Campus Skill-Swap{% endblock %}
+
+{% block content %}
+<section class="gradient-bg relative overflow-hidden">
+    <div class="absolute inset-0 bg-black opacity-20"></div>
+    <div class="relative container mx-auto px-4 py-16 lg:py-24">
+        <div class="text-center text-white">
+            <h1 class="text-4xl lg:text-5xl font-bold mb-4">Add a Skill You Want to Learn</h1>
+            <p class="text-lg lg:text-xl mb-6">Tell us what you'd like to learn and we'll help you find the perfect mentor!</p>
+        </div>
+    </div>
+    <div class="absolute top-20 left-10 w-20 h-20 bg-white opacity-10 rounded-full animate-bounce"></div>
+    <div class="absolute bottom-20 right-10 w-16 h-16 bg-yellow-300 opacity-20 rounded-full animate-pulse"></div>
+    <div class="absolute top-1/2 right-20 w-12 h-12 bg-green-400 opacity-15 rounded-full animate-bounce delay-75"></div>
+</section>
+
+<section class="py-12 bg-white">
+    <div class="container mx-auto px-4 max-w-2xl">
+        <div class="bg-white rounded-2xl shadow-2xl p-10">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">Learning Preferences</h2>
+            <form method="post" class="space-y-6">
+                {% csrf_token %}
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+                {% endif %}
+                
+                <div>
+                    <label for="id_skill_category" class="block text-gray-700 font-semibold mb-1">Skill Category</label>
+                    <select name="skill_category" id="id_skill_category" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" required>
+                        <option value="">Select a category...</option>
+                        {% for category in form.skill_category.field.queryset %}
+                            <option value="{{ category.id }}" {% if form.skill_category.value == category.id|stringformat:"s" %}selected{% endif %}>
+                                {{ category.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                    {% if form.skill_category.errors %}<div class="text-red-600 text-sm mt-1">{{ form.skill_category.errors.0 }}</div>{% endif %}
+                </div>
+                
+                <div>
+                    <label for="id_skill" class="block text-gray-700 font-semibold mb-1">Skill</label>
+                    <select name="skill" id="id_skill" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" required disabled>
+                        <option value="">First select a category...</option>
+                    </select>
+                    {% if form.skill.errors %}<div class="text-red-600 text-sm mt-1">{{ form.skill.errors.0 }}</div>{% endif %}
+                </div>
+                
+                <div>
+                    <label for="id_urgency" class="block text-gray-700 font-semibold mb-1">Urgency Level</label>
+                    {{ form.urgency }}
+                    {% if form.urgency.errors %}<div class="text-red-600 text-sm mt-1">{{ form.urgency.errors.0 }}</div>{% endif %}
+                </div>
+                
+                <div>
+                    <label for="id_current_level" class="block text-gray-700 font-semibold mb-1">Current Level</label>
+                    {{ form.current_level }}
+                    {% if form.current_level.errors %}<div class="text-red-600 text-sm mt-1">{{ form.current_level.errors.0 }}</div>{% endif %}
+                </div>
+                
+                <div>
+                    <label for="id_target_level" class="block text-gray-700 font-semibold mb-1">Target Level</label>
+                    {{ form.target_level }}
+                    {% if form.target_level.errors %}<div class="text-red-600 text-sm mt-1">{{ form.target_level.errors.0 }}</div>{% endif %}
+                </div>
+                
+                <div>
+                    <label for="id_learning_preference" class="block text-gray-700 font-semibold mb-1">Learning Preference</label>
+                    {{ form.learning_preference }}
+                    {% if form.learning_preference.errors %}<div class="text-red-600 text-sm mt-1">{{ form.learning_preference.errors.0 }}</div>{% endif %}
+                </div>
+                
+                <div>
+                    <label for="id_description" class="block text-gray-700 font-semibold mb-1">Description</label>
+                    {{ form.description }}
+                    <p class="text-xs text-gray-500 mt-1">What would you like to learn about this skill?</p>
+                    {% if form.description.errors %}<div class="text-red-600 text-sm mt-1">{{ form.description.errors.0 }}</div>{% endif %}
+                </div>
+                
+                <button type="submit" class="btn btn-primary-custom w-full py-3 text-lg font-semibold rounded-lg mt-2 shadow-md hover:scale-105 transition-transform">Add Desired Skill</button>
+            </form>
+        </div>
+    </div>
+</section>
+
+<script>
+$(document).ready(function() {
+    $('#id_skill_category').change(function() {
+        var categoryId = $(this).val();
+        var skillSelect = $('#id_skill');
+        
+        if (categoryId) {
+            skillSelect.prop('disabled', true);
+            skillSelect.html('<option value="">Loading skills...</option>');
+            
+            $.ajax({
+                url: '{% url "skills:get_skills_by_category" %}',
+                data: {'category_id': categoryId},
+                success: function(response) {
+                    skillSelect.html('<option value="">Select a skill...</option>');
+                    $.each(response.skills, function(index, skill) {
+                        skillSelect.append('<option value="' + skill.id + '">' + skill.name + '</option>');
+                    });
+                    skillSelect.prop('disabled', false);
+                },
+                error: function() {
+                    skillSelect.html('<option value="">Error loading skills</option>');
+                    skillSelect.prop('disabled', false);
+                }
+            });
+        } else {
+            skillSelect.html('<option value="">First select a category...</option>');
+            skillSelect.prop('disabled', true);
+        }
+    });
+    
+    // Trigger change event if category is already selected (for editing)
+    if ($('#id_skill_category').val()) {
+        $('#id_skill_category').trigger('change');
+    }
+});
+</script>
+{% endblock %}

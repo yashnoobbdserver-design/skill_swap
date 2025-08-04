@@ -1,0 +1,228 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My Requests - Campus Skill-Swap{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="gradient-bg relative overflow-hidden">
+    <div class="absolute inset-0 bg-black opacity-20"></div>
+    <div class="relative container mx-auto px-4 py-20">
+        <div class="text-center text-white">
+            <h1 class="text-4xl lg:text-5xl font-bold mb-6 leading-tight">
+                My <span class="text-yellow-300">Requests</span>
+            </h1>
+            <p class="text-lg lg:text-xl mb-8 max-w-3xl mx-auto">
+                Manage your skill swap requests. View sent and received requests, and track their status.
+            </p>
+        </div>
+    </div>
+</section>
+
+<!-- Request Management Section -->
+<section class="py-16 bg-gray-50">
+    <div class="container mx-auto px-4">
+        <!-- Request Stats -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+            <div class="bg-white rounded-xl p-6 shadow-lg text-center">
+                <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-paper-plane text-blue-600 text-2xl"></i>
+                </div>
+                <div class="text-3xl font-bold text-gray-800 mb-2">{{ requests.count }}</div>
+                <div class="text-gray-600">Total Requests</div>
+            </div>
+            <div class="bg-white rounded-xl p-6 shadow-lg text-center">
+                <div class="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-clock text-yellow-600 text-2xl"></i>
+                </div>
+                <div class="text-3xl font-bold text-gray-800 mb-2">
+                    {% regroup requests by status as grouped_requests %}
+                    {% for group in grouped_requests %}
+                        {% if group.grouper == 'pending' %}
+                            {{ group.list|length }}
+                        {% endif %}
+                    {% empty %}
+                        0
+                    {% endfor %}
+                </div>
+                <div class="text-gray-600">Pending Requests</div>
+            </div>
+            <div class="bg-white rounded-xl p-6 shadow-lg text-center">
+                <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-check-circle text-green-600 text-2xl"></i>
+                </div>
+                <div class="text-3xl font-bold text-gray-800 mb-2">
+                    {% regroup requests by status as grouped_requests %}
+                    {% for group in grouped_requests %}
+                        {% if group.grouper == 'accepted' %}
+                            {{ group.list|length }}
+                        {% endif %}
+                    {% empty %}
+                        0
+                    {% endfor %}
+                </div>
+                <div class="text-gray-600">Accepted Requests</div>
+            </div>
+        </div>
+
+        <!-- Request Navigation -->
+        <div class="mb-8">
+            <div class="flex flex-wrap gap-4 justify-center">
+                <a href="{% url 'skill_sessions:request_list' %}" 
+                   class="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors">
+                    <i class="fas fa-list mr-2"></i>All Requests
+                </a>
+                <a href="{% url 'skill_sessions:sent_requests' %}" 
+                   class="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition-colors">
+                    <i class="fas fa-paper-plane mr-2"></i>Sent Requests
+                </a>
+                <a href="{% url 'skill_sessions:received_requests' %}" 
+                   class="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition-colors">
+                    <i class="fas fa-inbox mr-2"></i>Received Requests
+                </a>
+            </div>
+        </div>
+
+        <!-- Requests List -->
+        {% if requests %}
+            <div class="space-y-6">
+                {% for request in requests %}
+                    <div class="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow">
+                        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+                            <div class="flex-1">
+                                <div class="flex items-start gap-4">
+                                    <!-- User Avatar -->
+                                    <div class="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center">
+                                        {% if request.recipient.profile.profile_picture %}
+                                            <img src="{{ request.recipient.profile.profile_picture.url }}" 
+                                                 alt="{{ request.recipient.username }}" 
+                                                 class="w-12 h-12 rounded-full object-cover">
+                                        {% else %}
+                                            <i class="fas fa-user text-gray-600"></i>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <!-- Request Details -->
+                                    <div class="flex-1">
+                                        <div class="flex items-center gap-2 mb-2">
+                                            <h3 class="text-lg font-semibold text-gray-800">
+                                                {{ request.offered_skill.skill.name }}
+                                            </h3>
+                                            <span class="px-2 py-1 text-xs font-medium rounded-full
+                                                {% if request.status == 'pending' %}bg-yellow-100 text-yellow-800
+                                                {% elif request.status == 'accepted' %}bg-green-100 text-green-800
+                                                {% elif request.status == 'declined' %}bg-red-100 text-red-800
+                                                {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                                {{ request.get_status_display }}
+                                            </span>
+                                        </div>
+                                        
+                                        <p class="text-gray-600 mb-2">
+                                            <i class="fas fa-arrow-right text-blue-500 mr-2"></i>
+                                            To: <span class="font-medium">{{ request.recipient.get_full_name|default:request.recipient.username }}</span>
+                                        </p>
+                                        
+                                        {% if request.message %}
+                                            <p class="text-gray-700 text-sm bg-gray-50 p-3 rounded-lg mb-3">
+                                                "{{ request.message }}"
+                                            </p>
+                                        {% endif %}
+                                        
+                                        <div class="flex flex-wrap gap-4 text-sm text-gray-500">
+                                            <span><i class="fas fa-clock mr-1"></i>{{ request.proposed_duration }} minutes</span>
+                                            <span><i class="fas fa-{{ request.proposed_format|yesno:'video,map-marker' }} mr-1"></i>{{ request.get_proposed_format_display }}</span>
+                                            {% if request.proposed_location %}
+                                                <span><i class="fas fa-location-dot mr-1"></i>{{ request.proposed_location }}</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Request Actions and Info -->
+                            <div class="mt-4 lg:mt-0 lg:ml-6 flex flex-col items-end gap-2">
+                                <div class="text-sm text-gray-500 text-right">
+                                    <div>Sent {{ request.created_at|timesince }} ago</div>
+                                    {% if request.expires_at %}
+                                        <div class="text-orange-600">
+                                            Expires {{ request.expires_at|timeuntil }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="flex gap-2">
+                                    <a href="{% url 'skill_sessions:request_detail' request.pk %}" 
+                                       class="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg text-sm font-medium hover:bg-blue-200 transition-colors">
+                                        <i class="fas fa-eye mr-1"></i>View Details
+                                    </a>
+                                    
+                                    {% if request.status == 'pending' %}
+                                        <a href="{% url 'skill_sessions:request_cancel' request.pk %}" 
+                                           class="px-4 py-2 bg-red-100 text-red-700 rounded-lg text-sm font-medium hover:bg-red-200 transition-colors"
+                                           onclick="return confirm('Are you sure you want to cancel this request?')">
+                                            <i class="fas fa-times mr-1"></i>Cancel
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+            
+            <!-- Pagination -->
+            {% if is_paginated %}
+                <div class="flex justify-center mt-12">
+                    <nav class="flex items-center space-x-2">
+                        {% if page_obj.has_previous %}
+                            <a href="?page={{ page_obj.previous_page_number }}" 
+                               class="px-4 py-2 text-gray-500 hover:text-blue-600 transition-colors">
+                                <i class="fas fa-chevron-left"></i>
+                            </a>
+                        {% endif %}
+                        
+                        {% for num in paginator.page_range %}
+                            {% if page_obj.number == num %}
+                                <span class="px-4 py-2 bg-blue-600 text-white rounded-lg">{{ num }}</span>
+                            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                <a href="?page={{ num }}" 
+                                   class="px-4 py-2 text-gray-600 hover:text-blue-600 transition-colors">{{ num }}</a>
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% if page_obj.has_next %}
+                            <a href="?page={{ page_obj.next_page_number }}" 
+                               class="px-4 py-2 text-gray-500 hover:text-blue-600 transition-colors">
+                                <i class="fas fa-chevron-right"></i>
+                            </a>
+                        {% endif %}
+                    </nav>
+                </div>
+            {% endif %}
+            
+        {% else %}
+            <!-- No Requests -->
+            <div class="text-center py-16">
+                <div class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <i class="fas fa-paper-plane text-gray-400 text-3xl"></i>
+                </div>
+                <h3 class="text-2xl font-bold text-gray-800 mb-4">No Requests Yet</h3>
+                <p class="text-gray-600 mb-8 max-w-md mx-auto">
+                    You haven't sent any skill swap requests yet. Browse available skills and start connecting with other students!
+                </p>
+                
+                <div class="space-y-4">
+                    <a href="{% url 'skills:skill_list' %}" 
+                       class="btn-primary-custom px-6 py-3 text-white rounded-lg font-semibold hover:shadow-lg transition-all inline-block">
+                        <i class="fas fa-search mr-2"></i>Browse Skills
+                    </a>
+                    <a href="{% url 'core:dashboard' %}" 
+                       class="border-2 border-blue-600 text-blue-600 px-6 py-3 rounded-lg font-semibold hover:bg-blue-600 hover:text-white transition-all inline-block">
+                        <i class="fas fa-tachometer-alt mr-2"></i>Go to Dashboard
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My Skills to Teach | Campus Skill-Swap{% endblock %}
+
+{% block content %}
+<section class="gradient-bg relative overflow-hidden">
+    <div class="absolute inset-0 bg-black opacity-20"></div>
+    <div class="relative container mx-auto px-4 py-16 lg:py-24">
+        <div class="text-center text-white">
+            <h1 class="text-4xl lg:text-5xl font-bold mb-4">Skills I Can Teach</h1>
+            <p class="text-lg lg:text-xl mb-6">Manage and showcase the skills you can teach to other students. Share your knowledge and help others learn!</p>
+        </div>
+    </div>
+    <div class="absolute top-20 left-10 w-20 h-20 bg-white opacity-10 rounded-full animate-bounce"></div>
+    <div class="absolute bottom-20 right-10 w-16 h-16 bg-yellow-300 opacity-20 rounded-full animate-pulse"></div>
+    <div class="absolute top-1/2 right-20 w-12 h-12 bg-green-400 opacity-15 rounded-full animate-bounce delay-75"></div>
+</section>
+
+<section class="py-12 bg-white">
+    <div class="container mx-auto px-4">
+        <!-- Offered Skills - Full Width -->
+        <div class="max-w-6xl mx-auto">
+            <div class="flex items-center justify-between mb-8">
+                <h2 class="text-3xl font-bold text-gray-800">My Skills</h2>
+            </div>
+            {% if offered_skills %}
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    {% for offered in offered_skills %}
+                    <div class="bg-blue-50 rounded-xl p-8 shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1">
+                        <div class="flex items-start gap-6">
+                            <div class="w-16 h-16 rounded-full flex items-center justify-center bg-white border-2 border-blue-200 shadow-sm">
+                                <i class="fas fa-graduation-cap text-blue-600 text-2xl"></i>
+                            </div>
+                            <div class="flex-1">
+                                <h3 class="text-2xl font-bold text-gray-800 mb-2">{{ offered.skill.name }}</h3>
+                                <p class="text-sm text-gray-600 mb-2">Proficiency: <span class="font-semibold text-blue-600">{{ offered.get_proficiency_level_display }}</span></p>
+                                <p class="text-gray-700 mb-3">{{ offered.description|truncatewords:20 }}</p>
+                                <div class="flex flex-wrap gap-2 mb-4">
+                                    <span class="inline-block bg-blue-100 text-blue-800 text-xs px-3 py-1 rounded-full">{{ offered.get_teaching_preference_display }}</span>
+                                    <span class="inline-block bg-green-100 text-green-800 text-xs px-3 py-1 rounded-full">{{ offered.years_of_experience }} years experience</span>
+                                    <span class="inline-block bg-yellow-100 text-yellow-800 text-xs px-3 py-1 rounded-full">{{ offered.total_sessions }} sessions | {{ offered.average_rating|floatformat:1 }}/5 ⭐</span>
+                                </div>
+                                <div class="flex gap-3">
+                                    <a href="{% url 'skills:offered_edit' offered.pk %}" class="text-blue-600 hover:text-blue-800 font-medium text-sm flex items-center">
+                                        <i class="fas fa-edit mr-1"></i>Edit
+                                    </a>
+                                    <a href="{% url 'skills:offered_delete' offered.pk %}" class="text-red-600 hover:text-red-800 font-medium text-sm flex items-center">
+                                        <i class="fas fa-trash mr-1"></i>Delete
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="bg-gray-50 rounded-xl p-12 text-center">
+                    <div class="w-24 h-24 mx-auto mb-6 bg-gray-200 rounded-full flex items-center justify-center">
+                        <i class="fas fa-graduation-cap text-gray-400 text-3xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-600 mb-2">No Skills Added Yet</h3>
+                    <p class="text-gray-500 mb-6">Start sharing your knowledge by adding skills you can teach to other students.</p>
+                    <a href="{% url 'skills:add_skill' %}" class="btn-primary-custom px-8 py-3 text-white rounded-lg font-semibold hover:shadow-lg transition-all inline-block">
+                        <i class="fas fa-plus mr-2"></i>Add Your First Skill
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+        
+        <!-- Engagement Section -->
+        <div class="mt-20 text-center max-w-4xl mx-auto">
+            <h3 class="text-3xl font-bold text-gray-800 mb-4">Share Your Knowledge, Make an Impact!</h3>
+                            <p class="text-lg text-gray-600 mb-8">Sharing skills with others is one of the best ways to reinforce your own learning. The more skills you offer, the more you can help your fellow students succeed!</p>
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <a href="{% url 'skills:skill_list' %}" class="btn-primary-custom px-8 py-3 text-white rounded-lg font-semibold hover:shadow-lg transition-all inline-block">
+                    <i class="fas fa-search mr-2"></i>Browse All Skills
+                </a>
+                <a href="{% url 'skills:add_skill' %}" class="bg-white border-2 border-blue-500 text-blue-500 px-8 py-3 rounded-lg font-semibold hover:bg-blue-50 transition-all inline-block">
+                    <i class="fas fa-plus mr-2"></i>Add Another Skill
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

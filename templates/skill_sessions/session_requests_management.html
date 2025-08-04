@@ -1,0 +1,759 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Session Requests Management{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Header -->
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-800 mb-2">
+                        <i class="fas fa-handshake mr-3 text-blue-600"></i>Session Requests Management
+                    </h1>
+                    <p class="text-gray-600">Manage your incoming and outgoing session requests</p>
+                </div>
+                <div class="mt-4 md:mt-0 flex space-x-4">
+                    <!-- Quick Stats -->
+                    <div class="text-center">
+                        <div class="text-2xl font-bold text-blue-600">{{ pending_received|length }}</div>
+                        <div class="text-sm text-gray-500">Pending Requests</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-2xl font-bold text-green-600">{{ accepted_requests|length }}</div>
+                        <div class="text-sm text-gray-500">Accepted Today</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab Navigation -->
+        <div class="bg-white rounded-xl shadow-lg mb-8">
+            <nav class="flex border-b border-gray-200">
+                <button class="tab-button active px-6 py-4 text-blue-600 border-b-2 border-blue-600 font-semibold" 
+                        data-tab="received" onclick="switchTab('received')">
+                    <i class="fas fa-inbox mr-2"></i>Received Requests
+                    {% if pending_received %}
+                        <span class="ml-2 bg-red-500 text-white text-xs px-2 py-1 rounded-full">{{ pending_received|length }}</span>
+                    {% endif %}
+                </button>
+                <button class="tab-button px-6 py-4 text-gray-500 hover:text-blue-600 font-semibold" 
+                        data-tab="sent" onclick="switchTab('sent')">
+                    <i class="fas fa-paper-plane mr-2"></i>Sent Requests
+                    {% if pending_sent %}
+                        <span class="ml-2 bg-blue-500 text-white text-xs px-2 py-1 rounded-full">{{ pending_sent|length }}</span>
+                    {% endif %}
+                </button>
+                <button class="tab-button px-6 py-4 text-gray-500 hover:text-blue-600 font-semibold" 
+                        data-tab="scheduled" onclick="switchTab('scheduled')">
+                    <i class="fas fa-calendar-check mr-2"></i>Scheduled Sessions
+                    {% if scheduled_sessions %}
+                        <span class="ml-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full">{{ scheduled_sessions|length }}</span>
+                    {% endif %}
+                </button>
+                <button class="tab-button px-6 py-4 text-gray-500 hover:text-blue-600 font-semibold" 
+                        data-tab="history" onclick="switchTab('history')">
+                    <i class="fas fa-history mr-2"></i>Session History
+                </button>
+            </nav>
+        </div>
+
+        <!-- Received Requests Tab -->
+        <div id="received-tab" class="tab-content">
+            <div class="space-y-6">
+                {% if received_requests %}
+                    {% for request in received_requests %}
+                        <div class="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300">
+                            <div class="p-6">
+                                <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+                                    <!-- Request Info -->
+                                    <div class="flex-1">
+                                        <div class="flex items-start space-x-4">
+                                            <!-- Requester Avatar -->
+                                            <div class="flex-shrink-0">
+                                                {% if request.requester.profile.profile_picture %}
+                                                    <img src="{{ request.requester.profile.profile_picture.url }}" 
+                                                         alt="{{ request.requester.get_full_name }}" 
+                                                         class="w-12 h-12 rounded-full object-cover">
+                                                {% else %}
+                                                    <div class="w-12 h-12 rounded-full bg-gray-300 flex items-center justify-center">
+                                                        <i class="fas fa-user text-gray-600"></i>
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                            
+                                            <!-- Request Details -->
+                                            <div class="flex-1">
+                                                <div class="flex items-center mb-2">
+                                                    <h3 class="text-lg font-semibold text-gray-800 mr-2">
+                                                        {{ request.requester.get_full_name }}
+                                                    </h3>
+                                                    <span class="status-badge status-{{ request.status }} px-2 py-1 rounded-full text-xs font-medium">
+                                                        {{ request.get_status_display }}
+                                                    </span>
+                                                </div>
+                                                
+                                                <div class="mb-3">
+                                                    <span class="text-blue-600 font-medium">{{ request.offered_skill.skill.name }}</span>
+                                                    <span class="text-gray-500 mx-2">•</span>
+                                                    <span class="text-sm text-gray-600">{{ request.offered_skill.get_proficiency_level_display }}</span>
+                                                </div>
+                                                
+                                                {% if request.message %}
+                                                    <div class="bg-gray-50 p-3 rounded-lg mb-3">
+                                                        <p class="text-gray-700 text-sm">{{ request.message|linebreaks }}</p>
+                                                    </div>
+                                                {% endif %}
+                                                
+                                                <!-- Session Details -->
+                                                <div class="flex flex-wrap gap-4 text-sm text-gray-600">
+                                                    <div class="flex items-center">
+                                                        <i class="fas fa-clock mr-1 text-blue-500"></i>
+                                                        {{ request.proposed_duration }} minutes
+                                                    </div>
+                                                    <div class="flex items-center">
+                                                        <i class="fas fa-video mr-1 text-green-500"></i>
+                                                        {{ request.get_proposed_format_display }}
+                                                    </div>
+                                                    {% if request.proposed_location %}
+                                                        <div class="flex items-center">
+                                                            <i class="fas fa-map-marker-alt mr-1 text-red-500"></i>
+                                                            {{ request.proposed_location }}
+                                                        </div>
+                                                    {% endif %}
+                                                    <div class="flex items-center">
+                                                        <i class="fas fa-calendar mr-1 text-purple-500"></i>
+                                                        {{ request.created_at|date:"M d, Y" }}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Action Buttons -->
+                                    {% if request.status == 'pending' and request.can_be_responded_to %}
+                                        <div class="mt-4 lg:mt-0 lg:ml-6 flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
+                                            <button class="accept-btn px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition duration-200 font-semibold"
+                                                    data-request-id="{{ request.id }}"
+                                                    onclick="handleRequestAction({{ request.id }}, 'accept')">
+                                                <i class="fas fa-check mr-2"></i>Accept
+                                            </button>
+                                            <button class="reject-btn px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition duration-200 font-semibold"
+                                                    data-request-id="{{ request.id }}"
+                                                    onclick="handleRequestAction({{ request.id }}, 'reject')">
+                                                <i class="fas fa-times mr-2"></i>Decline
+                                            </button>
+                                            <a href="{% url 'accounts:profile_details' request.requester.id %}" 
+                                               class="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition duration-200 font-semibold text-center">
+                                                <i class="fas fa-user mr-2"></i>View Profile
+                                            </a>
+                                        </div>
+                                    {% elif request.status == 'accepted' %}
+                                        <div class="mt-4 lg:mt-0 lg:ml-6">
+                                            {% if request.session %}
+                                                <span class="px-6 py-2 bg-gray-400 text-white rounded-lg font-semibold cursor-not-allowed">
+                                                    <i class="fas fa-check-circle mr-2"></i>Session Scheduled
+                                                </span>
+                                            {% else %}
+                                                <a href="{% url 'skill_sessions:schedule_session' request.id %}" 
+                                                   class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-200 font-semibold">
+                                                    <i class="fas fa-calendar-plus mr-2"></i>Schedule Session
+                                                </a>
+                                            {% endif %}
+                                        </div>
+                                    {% else %}
+                                        <div class="mt-4 lg:mt-0 lg:ml-6 text-sm text-gray-500">
+                                            {% if request.status == 'declined' %}
+                                                <div class="flex items-center">
+                                                    <i class="fas fa-times-circle text-red-500 mr-2"></i>
+                                                    Declined on {{ request.responded_at|date:"M d, Y" }}
+                                                </div>
+                                            {% elif request.status == 'expired' %}
+                                                <div class="flex items-center">
+                                                    <i class="fas fa-clock text-gray-400 mr-2"></i>
+                                                    Request Expired
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <!-- Progress Bar for Expiry -->
+                                {% if request.status == 'pending' %}
+                                    <div class="mt-4 pt-4 border-t border-gray-200">
+                                        <div class="flex justify-between text-xs text-gray-500 mb-1">
+                                            <span>Request expires in:</span>
+                                            <span class="countdown" data-expire-time="{{ request.expires_at|date:'c' }}">
+                                                {{ request.expires_at|timeuntil }}
+                                            </span>
+                                        </div>
+                                        <div class="w-full bg-gray-200 rounded-full h-1">
+                                            <div class="bg-orange-500 h-1 rounded-full expiry-progress" 
+                                                 data-created="{{ request.created_at|date:'c' }}"
+                                                 data-expires="{{ request.expires_at|date:'c' }}"></div>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="bg-white rounded-xl shadow-lg p-12 text-center">
+                        <i class="fas fa-inbox text-gray-300 text-6xl mb-4"></i>
+                        <h3 class="text-xl font-semibold text-gray-600 mb-2">No received requests</h3>
+                        <p class="text-gray-500">When someone sends you a skill swap request, it will appear here.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Sent Requests Tab -->
+        <div id="sent-tab" class="tab-content hidden">
+            <div class="space-y-6">
+                {% if sent_requests %}
+                    {% for request in sent_requests %}
+                        <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                            <div class="p-6">
+                                <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+                                    <!-- Request Info -->
+                                    <div class="flex-1">
+                                        <div class="flex items-start space-x-4">
+                                            <!-- Recipient Avatar -->
+                                            <div class="flex-shrink-0">
+                                                {% if request.recipient.profile.profile_picture %}
+                                                    <img src="{{ request.recipient.profile.profile_picture.url }}" 
+                                                         alt="{{ request.recipient.get_full_name }}" 
+                                                         class="w-12 h-12 rounded-full object-cover">
+                                                {% else %}
+                                                    <div class="w-12 h-12 rounded-full bg-gray-300 flex items-center justify-center">
+                                                        <i class="fas fa-user text-gray-600"></i>
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                            
+                                            <!-- Request Details -->
+                                            <div class="flex-1">
+                                                <div class="flex items-center mb-2">
+                                                    <h3 class="text-lg font-semibold text-gray-800 mr-2">
+                                                        Request to {{ request.recipient.get_full_name }}
+                                                    </h3>
+                                                    <span class="status-badge status-{{ request.status }} px-2 py-1 rounded-full text-xs font-medium">
+                                                        {{ request.get_status_display }}
+                                                    </span>
+                                                </div>
+                                                
+                                                <div class="mb-3">
+                                                    <span class="text-blue-600 font-medium">{{ request.offered_skill.skill.name }}</span>
+                                                    <span class="text-gray-500 mx-2">•</span>
+                                                    <span class="text-sm text-gray-600">Sent {{ request.created_at|timesince }} ago</span>
+                                                </div>
+                                                
+                                                {% if request.response_message %}
+                                                    <div class="bg-blue-50 p-3 rounded-lg mb-3">
+                                                        <div class="text-sm font-medium text-blue-800 mb-1">Response:</div>
+                                                        <p class="text-blue-700 text-sm">{{ request.response_message|linebreaks }}</p>
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Action Buttons -->
+                                    <div class="mt-4 lg:mt-0 lg:ml-6 flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
+                                        {% if request.status == 'pending' %}
+                                            <button class="cancel-btn px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition duration-200 font-semibold"
+                                                    data-request-id="{{ request.id }}"
+                                                    onclick="cancelRequest({{ request.id }})">
+                                                <i class="fas fa-times mr-2"></i>Cancel
+                                            </button>
+                                        {% elif request.status == 'accepted' %}
+                                            {% if request.session %}
+                                                <a href="{% url 'skill_sessions:session_detail' request.session.id %}" 
+                                                   class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition duration-200 font-semibold">
+                                                    <i class="fas fa-calendar-check mr-2"></i>View Session
+                                                </a>
+                                            {% else %}
+                                                <span class="px-6 py-2 bg-gray-400 text-white rounded-lg font-semibold cursor-not-allowed">
+                                                    <i class="fas fa-hourglass-half mr-2"></i>Awaiting Schedule
+                                                </span>
+                                            {% endif %}
+                                        {% endif %}
+                                        <a href="{% url 'accounts:profile_details' request.recipient.id %}" 
+                                           class="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition duration-200 font-semibold text-center">
+                                            <i class="fas fa-user mr-2"></i>View Profile
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="bg-white rounded-xl shadow-lg p-12 text-center">
+                        <i class="fas fa-paper-plane text-gray-300 text-6xl mb-4"></i>
+                        <h3 class="text-xl font-semibold text-gray-600 mb-2">No sent requests</h3>
+                        <p class="text-gray-500">You haven't sent any skill swap requests yet.</p>
+                        <a href="{% url 'skills:skill_list' %}" 
+                           class="mt-4 inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-200">
+                            <i class="fas fa-search mr-2"></i>Browse Skills
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Scheduled Sessions Tab -->
+        <div id="scheduled-tab" class="tab-content hidden">
+            <div class="space-y-6">
+                {% if scheduled_sessions %}
+                    {% for session in scheduled_sessions %}
+                        <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                            <div class="p-6">
+                                <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+                                    <div class="flex-1">
+                                        <div class="flex items-center mb-3">
+                                            <h3 class="text-lg font-semibold text-gray-800 mr-3">
+                                                {{ session.skill.name }}
+                                            </h3>
+                                            <span class="status-badge status-{{ session.status }} px-2 py-1 rounded-full text-xs font-medium">
+                                                {{ session.get_status_display }}
+                                            </span>
+                                        </div>
+                                        
+                                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                                            <div class="flex items-center">
+                                                <i class="fas fa-calendar text-blue-500 mr-2"></i>
+                                                <span>{{ session.scheduled_date|date:"M d, Y" }}</span>
+                                            </div>
+                                            <div class="flex items-center">
+                                                <i class="fas fa-clock text-green-500 mr-2"></i>
+                                                <span>{{ session.scheduled_date|time:"g:i A" }} ({{ session.duration_minutes }}min)</span>
+                                            </div>
+                                            <div class="flex items-center">
+                                                <i class="fas fa-user text-purple-500 mr-2"></i>
+                                                <span>
+                                                    {% if session.teacher == user %}
+                                                        Teaching to {{ session.learner.get_full_name }}
+                                                    {% else %}
+                                                        Learning from {{ session.teacher.get_full_name }}
+                                                    {% endif %}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        
+                                        {% if session.location or session.meeting_link %}
+                                            <div class="mt-3 p-3 bg-gray-50 rounded-lg">
+                                                {% if session.format == 'online' and session.meeting_link %}
+                                                    <div class="flex items-center">
+                                                        <i class="fas fa-video text-blue-500 mr-2"></i>
+                                                        <a href="{{ session.meeting_link }}" target="_blank" 
+                                                           class="text-blue-600 hover:text-blue-800">
+                                                            Join Online Session
+                                                        </a>
+                                                    </div>
+                                                {% elif session.location %}
+                                                    <div class="flex items-center">
+                                                        <i class="fas fa-map-marker-alt text-red-500 mr-2"></i>
+                                                        <span>{{ session.location }}</span>
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <div class="mt-4 lg:mt-0 lg:ml-6 flex flex-col space-y-2">
+                                        {% if session.status == 'cancelled' %}
+                                            <a href="{% url 'skill_sessions:reschedule_session' session.id %}" 
+                                               class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-200 font-semibold text-center">
+                                                <i class="fas fa-calendar-plus mr-2"></i>Reschedule Session
+                                            </a>
+                                        {% elif session.status == 'scheduled' %}
+                                            {% if session.can_start %}
+                                                <button class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition duration-200 font-semibold"
+                                                        onclick="startSession({{ session.id }})">
+                                                    <i class="fas fa-play mr-2"></i>Start Session
+                                                </button>
+                                            {% elif session.is_upcoming %}
+                                                <span class="px-6 py-2 bg-blue-100 text-blue-800 rounded-lg text-center font-semibold">
+                                                    <i class="fas fa-clock mr-2"></i>Upcoming
+                                                </span>
+                                            {% endif %}
+                                            
+                                            <button class="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition duration-200 font-semibold"
+                                                    onclick="cancelSession({{ session.id }})">
+                                                <i class="fas fa-times mr-2"></i>Cancel Session
+                                            </button>
+                                        {% endif %}
+                                        
+                                        <a href="{% url 'skill_sessions:session_detail' session.id %}" 
+                                           class="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition duration-200 font-semibold text-center">
+                                            <i class="fas fa-info-circle mr-2"></i>Details
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="bg-white rounded-xl shadow-lg p-12 text-center">
+                        <i class="fas fa-calendar-check text-gray-300 text-6xl mb-4"></i>
+                        <h3 class="text-xl font-semibold text-gray-600 mb-2">No scheduled sessions</h3>
+                        <p class="text-gray-500">Your scheduled learning sessions will appear here.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Session History Tab -->
+        <div id="history-tab" class="tab-content hidden">
+            <div class="space-y-6">
+                {% if completed_sessions %}
+                    {% for session in completed_sessions %}
+                        <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                            <div class="p-6">
+                                <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+                                    <div class="flex-1">
+                                        <div class="flex items-center mb-3">
+                                            <h3 class="text-lg font-semibold text-gray-800 mr-3">
+                                                {{ session.skill.name }}
+                                            </h3>
+                                            <span class="status-badge status-completed px-2 py-1 rounded-full text-xs font-medium">
+                                                Completed
+                                            </span>
+                                        </div>
+                                        
+                                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
+                                            <div class="flex items-center">
+                                                <i class="fas fa-calendar text-blue-500 mr-2"></i>
+                                                <span>{{ session.scheduled_date|date:"M d, Y" }}</span>
+                                            </div>
+                                            <div class="flex items-center">
+                                                <i class="fas fa-clock text-green-500 mr-2"></i>
+                                                <span>{{ session.actual_duration|default:session.duration_minutes }} minutes</span>
+                                            </div>
+                                            <div class="flex items-center">
+                                                <i class="fas fa-user text-purple-500 mr-2"></i>
+                                                <span>
+                                                    {% if session.teacher == user %}
+                                                        Taught to {{ session.learner.get_full_name }}
+                                                    {% else %}
+                                                        Learned from {{ session.teacher.get_full_name }}
+                                                    {% endif %}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mt-4 lg:mt-0 lg:ml-6 flex flex-col space-y-2">
+                                        <a href="{% url 'skill_sessions:session_detail' session.id %}" 
+                                           class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-200 font-semibold text-center">
+                                            <i class="fas fa-eye mr-2"></i>View Details
+                                        </a>
+                                        {% load session_tags %}
+                                        {% if not session|has_user_reviewed:user %}
+                                            <a href="{% url 'skill_sessions:leave_review' session.id %}" 
+                                               class="px-6 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition duration-200 font-semibold text-center">
+                                                <i class="fas fa-star mr-2"></i>Leave Review
+                                            </a>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="bg-white rounded-xl shadow-lg p-12 text-center">
+                        <i class="fas fa-history text-gray-300 text-6xl mb-4"></i>
+                        <h3 class="text-xl font-semibold text-gray-600 mb-2">No session history</h3>
+                        <p class="text-gray-500">Your completed sessions will appear here.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Response Modal -->
+<div id="responseModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-xl p-6 max-w-md w-full mx-4">
+        <h3 id="modalTitle" class="text-lg font-bold text-gray-800 mb-4"></h3>
+        <form id="responseForm">
+            <div class="mb-4">
+                <label for="responseMessage" class="block text-sm font-medium text-gray-700 mb-2">
+                    Message (Optional)
+                </label>
+                <textarea id="responseMessage" name="response_message" rows="3"
+                          class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          placeholder="Add a personal message..."></textarea>
+            </div>
+            <div class="flex space-x-3">
+                <button type="submit" id="confirmButton" 
+                        class="flex-1 py-2 px-4 rounded-lg font-semibold text-white transition duration-200">
+                    Confirm
+                </button>
+                <button type="button" onclick="closeModal()" 
+                        class="flex-1 py-2 px-4 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition duration-200">
+                    Cancel
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+.status-badge.status-pending { background-color: #FEF3C7; color: #92400E; }
+.status-badge.status-accepted { background-color: #D1FAE5; color: #065F46; }
+.status-badge.status-declined { background-color: #FEE2E2; color: #991B1B; }
+.status-badge.status-cancelled { background-color: #F3F4F6; color: #6B7280; }
+.status-badge.status-expired { background-color: #F3F4F6; color: #6B7280; }
+.status-badge.status-scheduled { background-color: #DBEAFE; color: #1E40AF; }
+.status-badge.status-completed { background-color: #D1FAE5; color: #065F46; }
+.status-badge.status-in_progress { background-color: #FEF3C7; color: #92400E; }
+
+.tab-button.active {
+    color: #2563EB;
+    border-bottom-color: #2563EB;
+}
+</style>
+
+<script>
+function switchTab(tabName) {
+    // Hide all tab contents
+    document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.classList.add('hidden');
+    });
+    
+    // Remove active class from all buttons
+    document.querySelectorAll('.tab-button').forEach(btn => {
+        btn.classList.remove('active', 'text-blue-600', 'border-b-2', 'border-blue-600');
+        btn.classList.add('text-gray-500');
+    });
+    
+    // Show selected tab
+    document.getElementById(tabName + '-tab').classList.remove('hidden');
+    
+    // Activate selected button
+    const activeButton = document.querySelector(`[data-tab="${tabName}"]`);
+    activeButton.classList.add('active', 'text-blue-600', 'border-b-2', 'border-blue-600');
+    activeButton.classList.remove('text-gray-500');
+}
+
+function handleRequestAction(requestId, action) {
+    const modal = document.getElementById('responseModal');
+    const title = document.getElementById('modalTitle');
+    const form = document.getElementById('responseForm');
+    const confirmButton = document.getElementById('confirmButton');
+    
+    if (action === 'accept') {
+        title.textContent = 'Accept Session Request';
+        confirmButton.textContent = 'Accept Request';
+        confirmButton.className = 'flex-1 py-2 px-4 bg-green-600 text-white rounded-lg hover:bg-green-700 transition duration-200 font-semibold';
+    } else {
+        title.textContent = 'Decline Session Request';
+        confirmButton.textContent = 'Decline Request';
+        confirmButton.className = 'flex-1 py-2 px-4 bg-red-600 text-white rounded-lg hover:bg-red-700 transition duration-200 font-semibold';
+    }
+    
+    form.onsubmit = function(e) {
+        e.preventDefault();
+        submitRequestResponse(requestId, action);
+    };
+    
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+}
+
+function submitRequestResponse(requestId, action) {
+    const responseMessage = document.getElementById('responseMessage').value;
+    
+    fetch(`/sessions/request/${requestId}/${action}/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({
+            'response_message': responseMessage
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            closeModal();
+            location.reload(); // Refresh to show updated status
+            
+            // Show success notification
+            showNotification(data.message, 'success');
+            
+            // Trigger dashboard stats update
+            if (window.triggerStatsUpdate) {
+                window.triggerStatsUpdate();
+            }
+        } else {
+            showNotification(data.error || 'An error occurred', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('An error occurred', 'error');
+    });
+}
+
+function cancelRequest(requestId) {
+    if (confirm('Are you sure you want to cancel this request?')) {
+        fetch(`/sessions/request/${requestId}/cancel/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+                showNotification(data.message, 'success');
+            } else {
+                showNotification(data.error || 'An error occurred', 'error');
+            }
+        });
+    }
+}
+
+function startSession(sessionId) {
+    fetch(`/sessions/sessions/${sessionId}/start/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            window.location.href = `/sessions/${sessionId}/`;
+        } else {
+            showNotification(data.error || 'Cannot start session yet', 'error');
+        }
+    });
+}
+
+function cancelSession(sessionId) {
+    if (confirm('Are you sure you want to cancel this session?')) {
+        fetch(`/sessions/${sessionId}/cancel/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+                showNotification(data.message, 'success');
+            } else {
+                showNotification(data.error || 'An error occurred', 'error');
+            }
+        });
+    }
+}
+
+function closeModal() {
+    const modal = document.getElementById('responseModal');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+    document.getElementById('responseMessage').value = '';
+}
+
+function showNotification(message, type) {
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `fixed top-4 right-4 px-6 py-3 rounded-lg shadow-lg z-50 ${
+        type === 'success' ? 'bg-green-600 text-white' : 'bg-red-600 text-white'
+    }`;
+    notification.textContent = message;
+    
+    document.body.appendChild(notification);
+    
+    // Remove after 3 seconds
+    setTimeout(() => {
+        notification.remove();
+    }, 3000);
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// Update countdown timers
+function updateCountdowns() {
+    document.querySelectorAll('.countdown').forEach(element => {
+        const expireTime = new Date(element.dataset.expireTime);
+        const now = new Date();
+        const timeLeft = expireTime - now;
+        
+        if (timeLeft > 0) {
+            const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+            
+            if (days > 0) {
+                element.textContent = `${days}d ${hours}h`;
+            } else if (hours > 0) {
+                element.textContent = `${hours}h ${minutes}m`;
+            } else {
+                element.textContent = `${minutes}m`;
+            }
+        } else {
+            element.textContent = 'Expired';
+            element.classList.add('text-red-500');
+        }
+    });
+}
+
+// Update progress bars
+function updateProgressBars() {
+    document.querySelectorAll('.expiry-progress').forEach(bar => {
+        const created = new Date(bar.dataset.created);
+        const expires = new Date(bar.dataset.expires);
+        const now = new Date();
+        
+        const total = expires - created;
+        const elapsed = now - created;
+        const progress = Math.min(100, (elapsed / total) * 100);
+        
+        bar.style.width = progress + '%';
+        
+        if (progress > 75) {
+            bar.classList.remove('bg-orange-500');
+            bar.classList.add('bg-red-500');
+        } else if (progress > 50) {
+            bar.classList.remove('bg-green-500');
+            bar.classList.add('bg-orange-500');
+        }
+    });
+}
+
+// Update every minute
+setInterval(() => {
+    updateCountdowns();
+    updateProgressBars();
+}, 60000);
+
+// Initial update
+document.addEventListener('DOMContentLoaded', () => {
+    updateCountdowns();
+    updateProgressBars();
+});
+</script>
+{% endblock %}

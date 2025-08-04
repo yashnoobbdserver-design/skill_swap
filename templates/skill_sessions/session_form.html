@@ -1,0 +1,230 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{% if object %}Reschedule Session{% else %}Schedule Session{% endif %} | Campus Skill-Swap{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-2xl mx-auto">
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="mb-6">
+                <h1 class="text-3xl font-bold text-gray-800 mb-2">
+                    <i class="fas fa-calendar-plus mr-3 text-blue-600"></i>
+                    {% if object %}Reschedule Session{% else %}Schedule Session{% endif %}
+                </h1>
+                {% if object %}
+                    <p class="text-gray-600">Update the session details for <strong>{{ object.skill.name }}</strong></p>
+                {% else %}
+                    <p class="text-gray-600">Set up your learning session</p>
+                {% endif %}
+            </div>
+
+            <form method="post" class="space-y-6">
+                {% csrf_token %}
+                
+                <!-- Session Details -->
+                <div class="bg-gray-50 rounded-lg p-4 mb-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-3">Session Information</h3>
+                    {% if object %}
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600">
+                            <div>
+                                <strong>Skill:</strong> {{ object.skill.name }}
+                            </div>
+                            <div>
+                                <strong>Teacher:</strong> {{ object.teacher.get_full_name }}
+                            </div>
+                            <div>
+                                <strong>Learner:</strong> {{ object.learner.get_full_name }}
+                            </div>
+                            <div>
+                                <strong>Status:</strong> 
+                                <span class="status-badge status-{{ object.status }} px-2 py-1 rounded-full text-xs">
+                                    {{ object.get_status_display }}
+                                </span>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Scheduled Date -->
+                <div class="form-group">
+                    <label for="{{ form.scheduled_date.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-calendar mr-2"></i>Scheduled Date & Time
+                    </label>
+                    {{ form.scheduled_date }}
+                    {% if form.scheduled_date.help_text %}
+                        <p class="mt-1 text-sm text-gray-500">{{ form.scheduled_date.help_text }}</p>
+                    {% endif %}
+                    {% if form.scheduled_date.errors %}
+                        <div class="mt-1 text-sm text-red-600">
+                            {% for error in form.scheduled_date.errors %}
+                                <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Duration -->
+                <div class="form-group">
+                    <label for="{{ form.duration_minutes.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-clock mr-2"></i>Duration (minutes)
+                    </label>
+                    {{ form.duration_minutes }}
+                    {% if form.duration_minutes.help_text %}
+                        <p class="mt-1 text-sm text-gray-500">{{ form.duration_minutes.help_text }}</p>
+                    {% endif %}
+                    {% if form.duration_minutes.errors %}
+                        <div class="mt-1 text-sm text-red-600">
+                            {% for error in form.duration_minutes.errors %}
+                                <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Format -->
+                <div class="form-group">
+                    <label for="{{ form.format.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-laptop mr-2"></i>Session Format
+                    </label>
+                    {{ form.format }}
+                    {% if form.format.help_text %}
+                        <p class="mt-1 text-sm text-gray-500">{{ form.format.help_text }}</p>
+                    {% endif %}
+                    {% if form.format.errors %}
+                        <div class="mt-1 text-sm text-red-600">
+                            {% for error in form.format.errors %}
+                                <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Location (conditional) -->
+                <div class="form-group" id="location-field">
+                    <label for="{{ form.location.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-map-marker-alt mr-2"></i>Location
+                    </label>
+                    {{ form.location }}
+                    {% if form.location.help_text %}
+                        <p class="mt-1 text-sm text-gray-500">{{ form.location.help_text }}</p>
+                    {% endif %}
+                    {% if form.location.errors %}
+                        <div class="mt-1 text-sm text-red-600">
+                            {% for error in form.location.errors %}
+                                <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Meeting Link (conditional) -->
+                <div class="form-group" id="meeting-link-field">
+                    <label for="{{ form.meeting_link.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-video mr-2"></i>Meeting Link
+                    </label>
+                    {{ form.meeting_link }}
+                    {% if form.meeting_link.help_text %}
+                        <p class="mt-1 text-sm text-gray-500">{{ form.meeting_link.help_text }}</p>
+                    {% endif %}
+                    {% if form.meeting_link.errors %}
+                        <div class="mt-1 text-sm text-red-600">
+                            {% for error in form.meeting_link.errors %}
+                                <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Notes -->
+                {% if form.teacher_notes %}
+                <div class="form-group">
+                    <label for="{{ form.teacher_notes.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-sticky-note mr-2"></i>Session Notes
+                    </label>
+                    {{ form.teacher_notes }}
+                    {% if form.teacher_notes.help_text %}
+                        <p class="mt-1 text-sm text-gray-500">{{ form.teacher_notes.help_text }}</p>
+                    {% endif %}
+                    {% if form.teacher_notes.errors %}
+                        <div class="mt-1 text-sm text-red-600">
+                            {% for error in form.teacher_notes.errors %}
+                                <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+
+                <!-- Form Errors -->
+                {% if form.non_field_errors %}
+                    <div class="bg-red-50 border border-red-200 rounded-md p-4">
+                        {% for error in form.non_field_errors %}
+                            <p class="text-red-800">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                <!-- Action Buttons -->
+                <div class="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4 pt-6 border-t border-gray-200">
+                    <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors">
+                        <i class="fas fa-check mr-2"></i>
+                        {% if object %}Update Session{% else %}Schedule Session{% endif %}
+                    </button>
+                    <a href="{% url 'skill_sessions:request_management' %}" 
+                       class="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors text-center">
+                        <i class="fas fa-arrow-left mr-2"></i>Back to Requests
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+.form-group input, .form-group select, .form-group textarea {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.status-badge.status-scheduled { background-color: #DBEAFE; color: #1E40AF; }
+.status-badge.status-cancelled { background-color: #F3F4F6; color: #6B7280; }
+.status-badge.status-completed { background-color: #D1FAE5; color: #065F46; }
+.status-badge.status-in-progress { background-color: #FEF3C7; color: #92400E; }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const formatField = document.querySelector('[name="format"]');
+    const locationField = document.getElementById('location-field');
+    const meetingLinkField = document.getElementById('meeting-link-field');
+
+    function toggleFields() {
+        const format = formatField.value;
+        if (format === 'in_person') {
+            locationField.style.display = 'block';
+            meetingLinkField.style.display = 'none';
+        } else if (format === 'online') {
+            locationField.style.display = 'none';
+            meetingLinkField.style.display = 'block';
+        } else {
+            locationField.style.display = 'block';
+            meetingLinkField.style.display = 'block';
+        }
+    }
+
+    formatField.addEventListener('change', toggleFields);
+    toggleFields(); // Initial call
+});
+</script>
+{% endblock %}

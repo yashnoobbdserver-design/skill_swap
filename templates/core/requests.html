@@ -1,0 +1,400 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Requests - Campus Skill-Swap{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="gradient-bg relative overflow-hidden">
+    <div class="absolute inset-0 bg-black opacity-20"></div>
+    <div class="relative container mx-auto px-4 py-20 lg:py-32">
+        <div class="text-center text-white">
+            <h1 class="text-4xl lg:text-6xl font-bold mb-6 leading-tight">
+                Skill Swap <span class="text-yellow-300">Requests</span>
+            </h1>
+            <p class="text-lg lg:text-xl mb-8 max-w-3xl mx-auto">
+                Manage your skill exchange requests. View incoming requests, track your sent requests, 
+                and organize your learning sessions all in one place.
+            </p>
+            
+            <!-- Filter Section -->
+            <div class="max-w-4xl mx-auto bg-white/10 backdrop-blur-sm rounded-2xl p-6 mb-8">
+                <form method="get" class="space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <!-- Request Type Filter -->
+                        <div class="relative">
+                            <select name="request_type" class="w-full px-4 py-3 rounded-lg border-0 text-gray-800 focus:ring-2 focus:ring-blue-500 appearance-none">
+                                <option value="">All Requests</option>
+                                <option value="received" {% if request.GET.request_type == 'received' %}selected{% endif %}>
+                                    Received Requests
+                                </option>
+                                <option value="sent" {% if request.GET.request_type == 'sent' %}selected{% endif %}>
+                                    Sent Requests
+                                </option>
+                            </select>
+                            <i class="fas fa-chevron-down absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+                        </div>
+                        
+                        <!-- Status Filter -->
+                        <div class="relative">
+                            <select name="status" class="w-full px-4 py-3 rounded-lg border-0 text-gray-800 focus:ring-2 focus:ring-blue-500 appearance-none">
+                                <option value="">All Statuses</option>
+                                <option value="pending" {% if request.GET.status == 'pending' %}selected{% endif %}>
+                                    Pending
+                                </option>
+                                <option value="accepted" {% if request.GET.status == 'accepted' %}selected{% endif %}>
+                                    Accepted
+                                </option>
+                                <option value="declined" {% if request.GET.status == 'declined' %}selected{% endif %}>
+                                    Declined
+                                </option>
+                                <option value="cancelled" {% if request.GET.status == 'cancelled' %}selected{% endif %}>
+                                    Cancelled
+                                </option>
+                            </select>
+                            <i class="fas fa-chevron-down absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+                        </div>
+                        
+                        <!-- Search Button -->
+                        <button type="submit" class="w-full bg-white text-blue-600 font-semibold py-3 px-6 rounded-lg hover:bg-gray-100 transition-colors">
+                            <i class="fas fa-filter mr-2"></i>Filter Requests
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <!-- Floating elements for visual appeal -->
+    <div class="absolute top-20 left-10 w-20 h-20 bg-white opacity-10 rounded-full animate-bounce"></div>
+    <div class="absolute bottom-20 right-10 w-16 h-16 bg-yellow-300 opacity-20 rounded-full animate-pulse"></div>
+    <div class="absolute top-1/2 right-20 w-12 h-12 bg-green-400 opacity-15 rounded-full animate-bounce delay-75"></div>
+</section>
+
+<!-- Requests Section -->
+<section class="py-16 bg-gray-50">
+    <div class="container mx-auto px-4">
+        <!-- Stats Overview -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
+            <div class="bg-white p-6 rounded-xl shadow-md text-center">
+                <div class="text-3xl font-bold text-blue-600 mb-2">{{ stats.total_requests|default:"0" }}</div>
+                <div class="text-gray-700">Total Requests</div>
+            </div>
+            <div class="bg-white p-6 rounded-xl shadow-md text-center">
+                <div class="text-3xl font-bold text-yellow-600 mb-2">{{ stats.pending_requests|default:"0" }}</div>
+                <div class="text-gray-700">Pending</div>
+            </div>
+            <div class="bg-white p-6 rounded-xl shadow-md text-center">
+                <div class="text-3xl font-bold text-green-600 mb-2">{{ stats.accepted_requests|default:"0" }}</div>
+                <div class="text-gray-700">Accepted</div>
+            </div>
+            <div class="bg-white p-6 rounded-xl shadow-md text-center">
+                <div class="text-3xl font-bold text-purple-600 mb-2">{{ stats.active_sessions|default:"0" }}</div>
+                <div class="text-gray-700">Active Sessions</div>
+            </div>
+        </div>
+
+        <!-- Request Tabs -->
+        <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+            <div class="border-b border-gray-200">
+                <nav class="-mb-px flex">
+                    <button class="tab-button active w-1/2 py-4 px-6 text-center border-b-2 border-blue-500 text-blue-600 font-medium" data-tab="received">
+                        <i class="fas fa-inbox mr-2"></i>Received Requests
+                    </button>
+                    <button class="tab-button w-1/2 py-4 px-6 text-center border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-medium" data-tab="sent">
+                        <i class="fas fa-paper-plane mr-2"></i>Sent Requests
+                    </button>
+                </nav>
+            </div>
+
+            <!-- Received Requests Tab -->
+            <div id="received-tab" class="tab-content p-6">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">Received Requests</h2>
+                {% if received_requests %}
+                    <div class="space-y-4">
+                        {% for request in received_requests %}
+                        <div class="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
+                            <div class="flex items-start justify-between">
+                                <div class="flex-1">
+                                    <div class="flex items-center mb-3">
+                                        <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mr-4">
+                                            <i class="fas fa-user text-blue-600"></i>
+                                        </div>
+                                        <div>
+                                            <h3 class="text-lg font-semibold text-gray-800">
+                                                {{ request.requester.get_full_name|default:request.requester.username }}
+                                            </h3>
+                                            <p class="text-sm text-gray-600">wants to learn {{ request.offered_skill.skill.name }}</p>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                                        <div>
+                                            <span class="text-sm font-medium text-gray-500">Duration:</span>
+                                            <p class="text-gray-800">{{ request.proposed_duration }} minutes</p>
+                                        </div>
+                                        <div>
+                                            <span class="text-sm font-medium text-gray-500">Format:</span>
+                                            <p class="text-gray-800">{{ request.get_proposed_format_display }}</p>
+                                        </div>
+                                        <div>
+                                            <span class="text-sm font-medium text-gray-500">Created:</span>
+                                            <p class="text-gray-800">{{ request.created_at|date:"M d, Y" }}</p>
+                                        </div>
+                                    </div>
+                                    
+                                    {% if request.message %}
+                                    <div class="mb-4">
+                                        <span class="text-sm font-medium text-gray-500">Message:</span>
+                                        <p class="text-gray-800 bg-gray-50 p-3 rounded-lg mt-1">{{ request.message }}</p>
+                                    </div>
+                                    {% endif %}
+                                    
+                                    {% if request.proposed_location %}
+                                    <div class="mb-4">
+                                        <span class="text-sm font-medium text-gray-500">Location:</span>
+                                        <p class="text-gray-800">{{ request.proposed_location }}</p>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="ml-6 text-right">
+                                    <span class="inline-block px-3 py-1 rounded-full text-sm font-semibold mb-4
+                                        {% if request.status == 'pending' %}bg-yellow-100 text-yellow-800
+                                        {% elif request.status == 'accepted' %}bg-green-100 text-green-800
+                                        {% elif request.status == 'declined' %}bg-red-100 text-red-800
+                                        {% elif request.status == 'cancelled' %}bg-gray-100 text-gray-800
+                                        {% elif request.status == 'expired' %}bg-orange-100 text-orange-800
+                                        {% endif %}">
+                                        {{ request.get_status_display }}
+                                    </span>
+                                    
+                                    {% if request.status == 'pending' and request.can_be_responded_to %}
+                                    <div class="space-y-2">
+                                        <form method="post" action="{% url 'skill_sessions:request_respond' request.pk %}" style="display: inline;">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="action" value="accept">
+                                            <button type="submit" class="w-full bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors" onclick="return confirm('Are you sure you want to accept this request?')">
+                                                <i class="fas fa-check mr-2"></i>Accept
+                                            </button>
+                                        </form>
+                                        <form method="post" action="{% url 'skill_sessions:request_respond' request.pk %}" style="display: inline;">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="action" value="decline">
+                                            <button type="submit" class="w-full bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors" onclick="return confirm('Are you sure you want to decline this request?')">
+                                                <i class="fas fa-times mr-2"></i>Decline
+                                            </button>
+                                        </form>
+                                    </div>
+                                    {% endif %}
+                                    
+                                    <a href="{% url 'skill_sessions:request_detail' request.pk %}" class="w-full mt-2 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors inline-block text-center text-decoration-none">
+                                        <i class="fas fa-eye mr-2"></i>View Details
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-12">
+                        <i class="fas fa-inbox text-6xl text-gray-300 mb-4"></i>
+                        <h3 class="text-xl font-semibold text-gray-600 mb-2">No received requests</h3>
+                        <p class="text-gray-500">When others request your skills, they'll appear here.</p>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Sent Requests Tab -->
+            <div id="sent-tab" class="tab-content p-6 hidden">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">Sent Requests</h2>
+                {% if sent_requests %}
+                    <div class="space-y-4">
+                        {% for request in sent_requests %}
+                        <div class="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
+                            <div class="flex items-start justify-between">
+                                <div class="flex-1">
+                                    <div class="flex items-center mb-3">
+                                        <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mr-4">
+                                            <i class="fas fa-user text-purple-600"></i>
+                                        </div>
+                                        <div>
+                                            <h3 class="text-lg font-semibold text-gray-800">
+                                                {{ request.recipient.get_full_name|default:request.recipient.username }}
+                                            </h3>
+                                            <p class="text-sm text-gray-600">Request for {{ request.offered_skill.skill.name }}</p>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                                        <div>
+                                            <span class="text-sm font-medium text-gray-500">Duration:</span>
+                                            <p class="text-gray-800">{{ request.proposed_duration }} minutes</p>
+                                        </div>
+                                        <div>
+                                            <span class="text-sm font-medium text-gray-500">Format:</span>
+                                            <p class="text-gray-800">{{ request.get_proposed_format_display }}</p>
+                                        </div>
+                                        <div>
+                                            <span class="text-sm font-medium text-gray-500">Sent:</span>
+                                            <p class="text-gray-800">{{ request.created_at|date:"M d, Y" }}</p>
+                                        </div>
+                                    </div>
+                                    
+                                    {% if request.message %}
+                                    <div class="mb-4">
+                                        <span class="text-sm font-medium text-gray-500">Your Message:</span>
+                                        <p class="text-gray-800 bg-gray-50 p-3 rounded-lg mt-1">{{ request.message }}</p>
+                                    </div>
+                                    {% endif %}
+                                    
+                                    {% if request.response_message %}
+                                    <div class="mb-4">
+                                        <span class="text-sm font-medium text-gray-500">Response:</span>
+                                        <p class="text-gray-800 bg-blue-50 p-3 rounded-lg mt-1">{{ request.response_message }}</p>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="ml-6 text-right">
+                                    <span class="inline-block px-3 py-1 rounded-full text-sm font-semibold mb-4
+                                        {% if request.status == 'pending' %}bg-yellow-100 text-yellow-800
+                                        {% elif request.status == 'accepted' %}bg-green-100 text-green-800
+                                        {% elif request.status == 'declined' %}bg-red-100 text-red-800
+                                        {% elif request.status == 'cancelled' %}bg-gray-100 text-gray-800
+                                        {% elif request.status == 'expired' %}bg-orange-100 text-orange-800
+                                        {% endif %}">
+                                        {{ request.get_status_display }}
+                                    </span>
+                                    
+                                    {% if request.status == 'pending' %}
+                                    <form method="post" action="{% url 'skill_sessions:request_cancel' request.pk %}" style="display: inline;">
+                                        {% csrf_token %}
+                                        <button type="submit" class="w-full bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors mb-2" onclick="return confirm('Are you sure you want to cancel this request?')">
+                                            <i class="fas fa-ban mr-2"></i>Cancel
+                                        </button>
+                                    </form>
+                                    {% endif %}
+                                    
+                                    <a href="{% url 'skill_sessions:request_detail' request.pk %}" class="w-full bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors inline-block text-center text-decoration-none">
+                                        <i class="fas fa-eye mr-2"></i>View Details
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-12">
+                        <i class="fas fa-paper-plane text-6xl text-gray-300 mb-4"></i>
+                        <h3 class="text-xl font-semibold text-gray-600 mb-2">No sent requests</h3>
+                        <p class="text-gray-500">Start connecting with others by browsing available skills and sending requests.</p>
+                        <a href="{% url 'skills:skill_list' %}" class="inline-block mt-4 bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 transition-colors">
+                            <i class="fas fa-search mr-2"></i>Browse Skills
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Active Sessions Section -->
+        <div class="mt-12 bg-white rounded-xl shadow-lg p-6">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">Active Sessions</h2>
+            {% if active_sessions %}
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {% for session in active_sessions %}
+                    <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                        <div class="flex items-center mb-3">
+                            <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mr-3">
+                                <i class="fas fa-chalkboard-teacher text-green-600"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-semibold text-gray-800">{{ session.skill.name }}</h3>
+                                <p class="text-sm text-gray-600">
+                                                                    {% if session.teacher == user %}
+                                    Sharing with {{ session.learner.get_full_name|default:session.learner.username }}
+                                {% else %}
+                                    Learning from {{ session.teacher.get_full_name|default:session.teacher.username }}
+                                {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <div class="space-y-2 text-sm">
+                            <div class="flex justify-between">
+                                <span class="text-gray-500">Date:</span>
+                                <span class="text-gray-800">{{ session.scheduled_date|date:"M d, Y" }}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-500">Time:</span>
+                                <span class="text-gray-800">{{ session.scheduled_date|time:"g:i A" }}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-500">Duration:</span>
+                                <span class="text-gray-800">{{ session.duration_minutes }} min</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-500">Format:</span>
+                                <span class="text-gray-800">{{ session.get_format_display }}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-4 pt-4 border-t border-gray-200">
+                            <span class="inline-block px-2 py-1 rounded-full text-xs font-semibold
+                                {% if session.status == 'scheduled' %}bg-blue-100 text-blue-800
+                                {% elif session.status == 'in_progress' %}bg-green-100 text-green-800
+                                {% elif session.status == 'completed' %}bg-gray-100 text-gray-800
+                                {% endif %}">
+                                {{ session.get_status_display }}
+                            </span>
+                            
+                            <button class="float-right bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600 transition-colors">
+                                <i class="fas fa-eye mr-1"></i>View
+                            </button>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-8">
+                    <i class="fas fa-calendar-alt text-4xl text-gray-300 mb-3"></i>
+                    <h3 class="text-lg font-semibold text-gray-600 mb-2">No active sessions</h3>
+                    <p class="text-gray-500">Your scheduled sessions will appear here.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Tab functionality
+    document.addEventListener('DOMContentLoaded', function() {
+        const tabButtons = document.querySelectorAll('.tab-button');
+        const tabContents = document.querySelectorAll('.tab-content');
+        
+        tabButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const targetTab = this.getAttribute('data-tab');
+                
+                // Remove active class from all buttons and contents
+                tabButtons.forEach(btn => {
+                    btn.classList.remove('active', 'border-blue-500', 'text-blue-600');
+                    btn.classList.add('border-transparent', 'text-gray-500');
+                });
+                
+                tabContents.forEach(content => {
+                    content.classList.add('hidden');
+                });
+                
+                // Add active class to clicked button
+                this.classList.add('active', 'border-blue-500', 'text-blue-600');
+                this.classList.remove('border-transparent', 'text-gray-500');
+                
+                // Show target content
+                document.getElementById(targetTab + '-tab').classList.remove('hidden');
+            });
+        });
+    });
+</script>
+{% endblock %}

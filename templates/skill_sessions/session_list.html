@@ -1,0 +1,476 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My Sessions - Campus Skill-Swap{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="gradient-bg relative overflow-hidden">
+    <div class="absolute inset-0 bg-black opacity-20"></div>
+    <div class="relative container mx-auto px-4 py-20">
+        <div class="text-center text-white">
+            <h1 class="text-4xl lg:text-5xl font-bold mb-6 leading-tight">
+                My <span class="text-yellow-300">Sessions</span>
+            </h1>
+            <p class="text-lg lg:text-xl mb-8 max-w-3xl mx-auto">
+                Manage your learning sessions. View upcoming sessions, track your progress, and approve or decline session requests.
+            </p>
+        </div>
+    </div>
+</section>
+
+<!-- Session Management Section -->
+<section class="py-16 bg-gray-50">
+    <div class="container mx-auto px-4">
+        <!-- Session Stats -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
+            <div class="bg-white rounded-xl p-6 shadow-lg text-center">
+                <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-calendar-plus text-blue-600 text-2xl"></i>
+                </div>
+                <div class="text-3xl font-bold text-gray-800 mb-2">{{ upcoming_sessions.count }}</div>
+                <div class="text-gray-600">Upcoming Sessions</div>
+            </div>
+            <div class="bg-white rounded-xl p-6 shadow-lg text-center">
+                <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-play-circle text-green-600 text-2xl"></i>
+                </div>
+                <div class="text-3xl font-bold text-gray-800 mb-2">{{ ongoing_sessions.count }}</div>
+                <div class="text-gray-600">Ongoing Sessions</div>
+            </div>
+            <div class="bg-white rounded-xl p-6 shadow-lg text-center">
+                <div class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-check-circle text-purple-600 text-2xl"></i>
+                </div>
+                <div class="text-3xl font-bold text-gray-800 mb-2">{{ completed_sessions.count }}</div>
+                <div class="text-gray-600">Completed Sessions</div>
+            </div>
+            <div class="bg-white rounded-xl p-6 shadow-lg text-center">
+                <div class="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-hourglass-half text-orange-600 text-2xl"></i>
+                </div>
+                <div class="text-3xl font-bold text-gray-800 mb-2">{{ pending_requests.count }}</div>
+                <div class="text-gray-600">Pending Approvals</div>
+            </div>
+        </div>
+
+        <!-- Session Tabs -->
+        <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+            <div class="border-b border-gray-200">
+                <nav class="flex space-x-8 px-6" aria-label="Tabs">
+                    <button onclick="showTab('pending')" id="pending-tab" class="tab-button border-b-2 border-blue-500 py-4 px-1 text-sm font-medium text-blue-600">
+                        <i class="fas fa-clock mr-2"></i>Pending Approvals ({{ pending_requests.count }})
+                    </button>
+                    <button onclick="showTab('upcoming')" id="upcoming-tab" class="tab-button border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                        <i class="fas fa-calendar-alt mr-2"></i>Upcoming ({{ upcoming_sessions.count }})
+                    </button>
+                    <button onclick="showTab('ongoing')" id="ongoing-tab" class="tab-button border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                        <i class="fas fa-play mr-2"></i>Ongoing ({{ ongoing_sessions.count }})
+                    </button>
+                    <button onclick="showTab('completed')" id="completed-tab" class="tab-button border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                        <i class="fas fa-check mr-2"></i>Completed ({{ completed_sessions.count }})
+                    </button>
+                </nav>
+            </div>
+
+            <!-- Pending Approvals Tab -->
+            <div id="pending-content" class="tab-content p-6">
+                <h3 class="text-xl font-bold text-gray-800 mb-6">Sessions Pending Your Approval</h3>
+                {% if pending_requests %}
+                    <div class="space-y-4">
+                        {% for request in pending_requests %}
+                            <div class="bg-gray-50 rounded-lg p-6 border-l-4 border-orange-500">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex-1">
+                                        <div class="flex items-center space-x-4 mb-3">
+                                            <a href="{% url 'accounts:profile_view' request.requester.id %}" class="flex items-center space-x-3 hover:bg-white rounded-lg p-2 transition-colors">
+                                                {% if request.requester.profile.profile_picture %}
+                                                    <img src="{{ request.requester.profile.profile_picture.url }}" alt="Profile" class="w-10 h-10 rounded-full">
+                                                {% else %}
+                                                    <div class="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
+                                                        <span class="text-white text-sm font-medium">{{ request.requester.first_name|first|upper }}{{ request.requester.last_name|first|upper }}</span>
+                                                    </div>
+                                                {% endif %}
+                                                <div>
+                                                    <div class="font-semibold text-gray-800 hover:text-blue-600">{{ request.requester.get_full_name|default:request.requester.username }}</div>
+                                                    <div class="text-sm text-gray-500">@{{ request.requester.username }}</div>
+                                                </div>
+                                            </a>
+                                            <div class="text-gray-600">wants to learn</div>
+                                            <div class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
+                                                {{ request.offered_skill.skill.name }}
+                                            </div>
+                                        </div>
+                                        
+                                        {% if request.message %}
+                                            <div class="bg-white rounded-lg p-4 mb-4">
+                                                <p class="text-gray-700 italic">"{{ request.message }}"</p>
+                                            </div>
+                                        {% endif %}
+                                        
+                                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
+                                            <div>
+                                                <i class="fas fa-clock mr-2"></i>Duration: {{ request.proposed_duration }} minutes
+                                            </div>
+                                            <div>
+                                                <i class="fas fa-video mr-2"></i>Format: {{ request.get_proposed_format_display }}
+                                            </div>
+                                            <div>
+                                                <i class="fas fa-calendar mr-2"></i>Requested: {{ request.created_at|date:"M d, Y" }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="flex space-x-3 ml-6">
+                                        <form method="post" action="{% url 'skill_sessions:request_respond' request.pk %}" class="inline">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="action" value="accept">
+                                            <button type="submit" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+                                                <i class="fas fa-check mr-2"></i>Approve
+                                            </button>
+                                        </form>
+                                        <form method="post" action="{% url 'skill_sessions:request_respond' request.pk %}" class="inline">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="action" value="decline">
+                                            <button type="submit" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+                                                <i class="fas fa-times mr-2"></i>Decline
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-12">
+                        <i class="fas fa-inbox text-gray-300 text-6xl mb-4"></i>
+                        <h3 class="text-xl font-semibold text-gray-600 mb-2">No Pending Approvals</h3>
+                        <p class="text-gray-500">You're all caught up! No sessions waiting for your approval.</p>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Upcoming Sessions Tab -->
+            <div id="upcoming-content" class="tab-content p-6 hidden">
+                <h3 class="text-xl font-bold text-gray-800 mb-6">Upcoming Sessions</h3>
+                {% if upcoming_sessions %}
+                    <div class="space-y-4">
+                        {% for session in upcoming_sessions %}
+                            <div class="bg-blue-50 rounded-lg p-6 border-l-4 border-blue-500">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex-1">
+                                        <div class="flex items-center space-x-4 mb-3">
+                                            {% if session.teacher == user %}
+                                                <span class="text-gray-600">Sharing</span>
+                                                <a href="{% url 'accounts:profile_view' session.learner.id %}" class="flex items-center space-x-3 hover:bg-white rounded-lg p-2 transition-colors">
+                                                    {% if session.learner.profile.profile_picture %}
+                                                        <img src="{{ session.learner.profile.profile_picture.url }}" alt="Profile" class="w-10 h-10 rounded-full">
+                                                    {% else %}
+                                                        <div class="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
+                                                            <span class="text-white text-sm font-medium">{{ session.learner.first_name|first|upper }}{{ session.learner.last_name|first|upper }}</span>
+                                                        </div>
+                                                    {% endif %}
+                                                    <div>
+                                                        <div class="font-semibold text-gray-800 hover:text-blue-600">{{ session.learner.get_full_name|default:session.learner.username }}</div>
+                                                        <div class="text-sm text-gray-500">@{{ session.learner.username }}</div>
+                                                    </div>
+                                                </a>
+                                            {% else %}
+                                                <span class="text-gray-600">Learning from</span>
+                                                <a href="{% url 'accounts:profile_view' session.teacher.id %}" class="flex items-center space-x-3 hover:bg-white rounded-lg p-2 transition-colors">
+                                                    {% if session.teacher.profile.profile_picture %}
+                                                        <img src="{{ session.teacher.profile.profile_picture.url }}" alt="Profile" class="w-10 h-10 rounded-full">
+                                                    {% else %}
+                                                        <div class="w-10 h-10 bg-purple-500 rounded-full flex items-center justify-center">
+                                                            <span class="text-white text-sm font-medium">{{ session.teacher.first_name|first|upper }}{{ session.teacher.last_name|first|upper }}</span>
+                                                        </div>
+                                                    {% endif %}
+                                                    <div>
+                                                        <div class="font-semibold text-gray-800 hover:text-blue-600">{{ session.teacher.get_full_name|default:session.teacher.username }}</div>
+                                                        <div class="text-sm text-gray-500">@{{ session.teacher.username }}</div>
+                                                    </div>
+                                                </a>
+                                            {% endif %}
+                                            <div class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
+                                                {{ session.skill.name }}
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm text-gray-600">
+                                            <div>
+                                                <i class="fas fa-calendar mr-2"></i>{{ session.scheduled_date|date:"M d, Y" }}
+                                            </div>
+                                            <div>
+                                                <i class="fas fa-clock mr-2"></i>{{ session.scheduled_date|time:"g:i A" }}
+                                            </div>
+                                            <div>
+                                                <i class="fas fa-hourglass-half mr-2"></i>{{ session.duration_minutes }} min
+                                            </div>
+                                            <div>
+                                                <i class="fas fa-video mr-2"></i>{{ session.get_format_display }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="flex space-x-3 ml-6">
+                                        <a href="{% url 'skill_sessions:session_detail' session.pk %}" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+                                            <i class="fas fa-eye mr-2"></i>View
+                                        </a>
+                                        {% if session.can_start %}
+                                            <form method="post" action="{% url 'skill_sessions:session_start' session.pk %}" class="inline">
+                                                {% csrf_token %}
+                                                <button type="submit" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+                                                    <i class="fas fa-play mr-2"></i>Start
+                                                </button>
+                                            </form>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-12">
+                        <i class="fas fa-calendar-alt text-gray-300 text-6xl mb-4"></i>
+                        <h3 class="text-xl font-semibold text-gray-600 mb-2">No Upcoming Sessions</h3>
+                        <p class="text-gray-500">You don't have any sessions scheduled yet.</p>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Ongoing Sessions Tab -->
+            <div id="ongoing-content" class="tab-content p-6 hidden">
+                <h3 class="text-xl font-bold text-gray-800 mb-6">Ongoing Sessions</h3>
+                {% if ongoing_sessions %}
+                    <div class="space-y-4">
+                        {% for session in ongoing_sessions %}
+                            <div class="bg-green-50 rounded-lg p-6 border-l-4 border-green-500">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex-1">
+                                        <div class="flex items-center space-x-4 mb-3">
+                                            <div class="flex items-center space-x-2">
+                                                <div class="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                                                <span class="text-green-600 font-medium">LIVE</span>
+                                            </div>
+                                            {% if session.teacher == user %}
+                                                <span class="text-gray-600">Sharing</span>
+                                                <a href="{% url 'accounts:profile_view' session.learner.id %}" class="flex items-center space-x-3 hover:bg-white rounded-lg p-2 transition-colors">
+                                                    {% if session.learner.profile.profile_picture %}
+                                                        <img src="{{ session.learner.profile.profile_picture.url }}" alt="Profile" class="w-10 h-10 rounded-full">
+                                                    {% else %}
+                                                        <div class="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
+                                                            <span class="text-white text-sm font-medium">{{ session.learner.first_name|first|upper }}{{ session.learner.last_name|first|upper }}</span>
+                                                        </div>
+                                                    {% endif %}
+                                                    <div>
+                                                        <div class="font-semibold text-gray-800 hover:text-blue-600">{{ session.learner.get_full_name|default:session.learner.username }}</div>
+                                                        <div class="text-sm text-gray-500">@{{ session.learner.username }}</div>
+                                                    </div>
+                                                </a>
+                                            {% else %}
+                                                <span class="text-gray-600">Learning from</span>
+                                                <a href="{% url 'accounts:profile_view' session.teacher.id %}" class="flex items-center space-x-3 hover:bg-white rounded-lg p-2 transition-colors">
+                                                    {% if session.teacher.profile.profile_picture %}
+                                                        <img src="{{ session.teacher.profile.profile_picture.url }}" alt="Profile" class="w-10 h-10 rounded-full">
+                                                    {% else %}
+                                                        <div class="w-10 h-10 bg-purple-500 rounded-full flex items-center justify-center">
+                                                            <span class="text-white text-sm font-medium">{{ session.teacher.first_name|first|upper }}{{ session.teacher.last_name|first|upper }}</span>
+                                                        </div>
+                                                    {% endif %}
+                                                    <div>
+                                                        <div class="font-semibold text-gray-800 hover:text-blue-600">{{ session.teacher.get_full_name|default:session.teacher.username }}</div>
+                                                        <div class="text-sm text-gray-500">@{{ session.teacher.username }}</div>
+                                                    </div>
+                                                </a>
+                                            {% endif %}
+                                            <div class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
+                                                {{ session.skill.name }}
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
+                                            <div>
+                                                <i class="fas fa-play mr-2"></i>Started: {{ session.started_at|time:"g:i A" }}
+                                            </div>
+                                            <div>
+                                                <i class="fas fa-hourglass-half mr-2"></i>Duration: {{ session.duration_minutes }} min
+                                            </div>
+                                            <div>
+                                                <i class="fas fa-video mr-2"></i>{{ session.get_format_display }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="flex space-x-3 ml-6">
+                                        <a href="{% url 'skill_sessions:session_detail' session.pk %}" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+                                            <i class="fas fa-eye mr-2"></i>View
+                                        </a>
+                                        <form method="post" action="{% url 'skill_sessions:session_end' session.pk %}" class="inline">
+                                            {% csrf_token %}
+                                            <button type="submit" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+                                                <i class="fas fa-stop mr-2"></i>End Session
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-12">
+                        <i class="fas fa-play-circle text-gray-300 text-6xl mb-4"></i>
+                        <h3 class="text-xl font-semibold text-gray-600 mb-2">No Ongoing Sessions</h3>
+                        <p class="text-gray-500">No sessions are currently in progress.</p>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Completed Sessions Tab -->
+            <div id="completed-content" class="tab-content p-6 hidden">
+                <h3 class="text-xl font-bold text-gray-800 mb-6">Completed Sessions</h3>
+                {% if completed_sessions %}
+                    <div class="space-y-4">
+                        {% for session in completed_sessions %}
+                            <div class="bg-purple-50 rounded-lg p-6 border-l-4 border-purple-500">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex-1">
+                                        <div class="flex items-center space-x-4 mb-3">
+                                            <div class="flex items-center space-x-2">
+                                                <i class="fas fa-check-circle text-purple-600"></i>
+                                                <span class="text-purple-600 font-medium">COMPLETED</span>
+                                            </div>
+                                            {% if session.teacher == user %}
+                                                <span class="text-gray-600">Taught</span>
+                                                <a href="{% url 'accounts:profile_view' session.learner.id %}" class="flex items-center space-x-3 hover:bg-white rounded-lg p-2 transition-colors">
+                                                    {% if session.learner.profile.profile_picture %}
+                                                        <img src="{{ session.learner.profile.profile_picture.url }}" alt="Profile" class="w-10 h-10 rounded-full">
+                                                    {% else %}
+                                                        <div class="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
+                                                            <span class="text-white text-sm font-medium">{{ session.learner.first_name|first|upper }}{{ session.learner.last_name|first|upper }}</span>
+                                                        </div>
+                                                    {% endif %}
+                                                    <div>
+                                                        <div class="font-semibold text-gray-800 hover:text-blue-600">{{ session.learner.get_full_name|default:session.learner.username }}</div>
+                                                        <div class="text-sm text-gray-500">@{{ session.learner.username }}</div>
+                                                    </div>
+                                                </a>
+                                            {% else %}
+                                                <span class="text-gray-600">Learned from</span>
+                                                <a href="{% url 'accounts:profile_view' session.teacher.id %}" class="flex items-center space-x-3 hover:bg-white rounded-lg p-2 transition-colors">
+                                                    {% if session.teacher.profile.profile_picture %}
+                                                        <img src="{{ session.teacher.profile.profile_picture.url }}" alt="Profile" class="w-10 h-10 rounded-full">
+                                                    {% else %}
+                                                        <div class="w-10 h-10 bg-purple-500 rounded-full flex items-center justify-center">
+                                                            <span class="text-white text-sm font-medium">{{ session.teacher.first_name|first|upper }}{{ session.teacher.last_name|first|upper }}</span>
+                                                        </div>
+                                                    {% endif %}
+                                                    <div>
+                                                        <div class="font-semibold text-gray-800 hover:text-blue-600">{{ session.teacher.get_full_name|default:session.teacher.username }}</div>
+                                                        <div class="text-sm text-gray-500">@{{ session.teacher.username }}</div>
+                                                    </div>
+                                                </a>
+                                            {% endif %}
+                                            <div class="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm font-medium">
+                                                {{ session.skill.name }}
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm text-gray-600">
+                                            <div>
+                                                <i class="fas fa-calendar mr-2"></i>{{ session.scheduled_date|date:"M d, Y" }}
+                                            </div>
+                                            <div>
+                                                <i class="fas fa-clock mr-2"></i>{{ session.ended_at|time:"g:i A" }}
+                                            </div>
+                                            <div>
+                                                <i class="fas fa-hourglass-half mr-2"></i>{{ session.actual_duration|default:session.duration_minutes }} min
+                                            </div>
+                                            <div>
+                                                <i class="fas fa-star mr-2"></i>
+                                                {% if session.reviews.exists %}
+                                                    Reviewed
+                                                {% else %}
+                                                    Not Reviewed
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="flex space-x-3 ml-6">
+                                        <a href="{% url 'skill_sessions:session_detail' session.pk %}" class="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+                                            <i class="fas fa-eye mr-2"></i>View
+                                        </a>
+                                        {% load session_tags %}
+                                        {% if not session|has_user_reviewed:user %}
+                                            <a href="{% url 'skill_sessions:review_create' session.pk %}" class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+                                                <i class="fas fa-star mr-2"></i>Review
+                                            </a>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-12">
+                        <i class="fas fa-check-circle text-gray-300 text-6xl mb-4"></i>
+                        <h3 class="text-xl font-semibual text-gray-600 mb-2">No Completed Sessions</h3>
+                        <p class="text-gray-500">Complete your first session to see it here.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .tab-button.active {
+        border-color: #3B82F6;
+        color: #3B82F6;
+    }
+    
+    .tab-button:not(.active) {
+        border-color: transparent;
+        color: #6B7280;
+    }
+    
+    .tab-button:not(.active):hover {
+        border-color: #D1D5DB;
+        color: #374151;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function showTab(tabName) {
+    // Hide all tab contents
+    const contents = document.querySelectorAll('.tab-content');
+    contents.forEach(content => content.classList.add('hidden'));
+    
+    // Remove active class from all tabs
+    const tabs = document.querySelectorAll('.tab-button');
+    tabs.forEach(tab => {
+        tab.classList.remove('active');
+        tab.classList.add('border-transparent', 'text-gray-500');
+        tab.classList.remove('border-blue-500', 'text-blue-600');
+    });
+    
+    // Show selected tab content
+    document.getElementById(tabName + '-content').classList.remove('hidden');
+    
+    // Add active class to selected tab
+    const activeTab = document.getElementById(tabName + '-tab');
+    activeTab.classList.add('active');
+    activeTab.classList.remove('border-transparent', 'text-gray-500');
+    activeTab.classList.add('border-blue-500', 'text-blue-600');
+}
+
+// Set default tab on page load
+document.addEventListener('DOMContentLoaded', function() {
+    showTab('pending');
+});
+</script>
+{% endblock %}

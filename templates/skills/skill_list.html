@@ -1,0 +1,461 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Browse Skills - Campus Skill-Swap{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="gradient-bg relative overflow-hidden">
+    <div class="absolute inset-0 bg-black opacity-20"></div>
+    <div class="relative container mx-auto px-4 py-20 lg:py-32">
+        <div class="text-center text-white">
+            <h1 class="text-4xl lg:text-6xl font-bold mb-6 leading-tight">
+                Discover <span class="text-yellow-300">Skills</span> to Learn
+            </h1>
+            <p class="text-lg lg:text-xl mb-8 max-w-3xl mx-auto">
+                Explore thousands of skills shared by your fellow students. Find the perfect match for your learning journey 
+                and start your skill-swap adventure today.
+            </p>
+            
+            <!-- Search and Filter Section -->
+            <div class="max-w-4xl mx-auto bg-white/10 backdrop-blur-sm rounded-2xl p-6 mb-8">
+                <form method="get" class="space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <!-- Category Filter -->
+                        <div class="relative">
+                            <select name="category" id="id_category" class="w-full px-4 py-3 rounded-lg border-0 text-gray-800 focus:ring-2 focus:ring-blue-500 appearance-none">
+                                <option value="">Select Category...</option>
+                                {% for category in search_form.category.field.queryset %}
+                                    <option value="{{ category.id }}" {% if request.GET.category|add:"0" == category.id %}selected{% endif %}>
+                                        {{ category.name }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                            <i class="fas fa-chevron-down absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+                        </div>
+                        
+                        <!-- Skill Filter -->
+                        <div class="relative">
+                            <select name="skill" id="id_skill" class="w-full px-4 py-3 rounded-lg border-0 text-gray-800 focus:ring-2 focus:ring-blue-500 appearance-none" {% if not request.GET.category %}disabled{% endif %}>
+                                <option value="">Select Skill...</option>
+                                {% if request.GET.skill %}
+                                    {% for skill in search_form.skill.field.queryset %}
+                                        <option value="{{ skill.id }}" {% if request.GET.skill|add:"0" == skill.id %}selected{% endif %}>
+                                            {{ skill.name }}
+                                        </option>
+                                    {% endfor %}
+                                {% endif %}
+                            </select>
+                            <i class="fas fa-chevron-down absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+                        </div>
+                        
+                        <!-- Sort Options -->
+                        <div class="relative">
+                            <select name="sort" class="w-full px-4 py-3 rounded-lg border-0 text-gray-800 focus:ring-2 focus:ring-blue-500 appearance-none">
+                                <option value="name" {% if request.GET.sort == 'name' %}selected{% endif %}>Sort by Name</option>
+                                <option value="popular" {% if request.GET.sort == 'popular' %}selected{% endif %}>Most Popular</option>
+                                <option value="recent" {% if request.GET.sort == 'recent' %}selected{% endif %}>Recently Added</option>
+                            </select>
+                            <i class="fas fa-chevron-down absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                        <button type="submit" class="bg-white text-blue-600 px-6 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-all">
+                            <i class="fas fa-filter mr-2"></i>Apply Filters
+                        </button>
+                        <a href="{% url 'skills:skill_list' %}" class="border-2 border-white text-white px-6 py-3 rounded-lg font-semibold hover:bg-white hover:text-blue-600 transition-all text-center">
+                            <i class="fas fa-times mr-2"></i>Clear Filters
+                        </a>
+                    </div>
+                </form>
+            </div>
+            
+            <!-- Quick Stats -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto">
+                <div class="text-center">
+                    <div class="text-3xl font-bold">{{ skills.count|default:"0" }}</div>
+                    <div class="text-blue-200">Skills Available</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-3xl font-bold">{{ categories.count|default:"0" }}</div>
+                    <div class="text-blue-200">Categories</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-3xl font-bold">{{ total_users|default:"0" }}</div>
+                    <div class="text-blue-200">Active Users</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-3xl font-bold">{{ total_sessions|default:"0" }}</div>
+                    <div class="text-blue-200">Sessions Completed</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Floating elements for visual appeal -->
+    <div class="absolute top-20 left-10 w-20 h-20 bg-white opacity-10 rounded-full animate-bounce"></div>
+    <div class="absolute bottom-20 right-10 w-16 h-16 bg-yellow-300 opacity-20 rounded-full animate-pulse"></div>
+    <div class="absolute top-1/2 right-20 w-12 h-12 bg-green-400 opacity-15 rounded-full animate-bounce delay-75"></div>
+</section>
+
+
+
+<!-- Trending Skills Section -->
+{% if show_trending %}
+<section class="py-16 bg-white" id="trending-skills">
+    <div class="container mx-auto px-4">
+        <div class="text-center mb-12">
+            <h2 class="text-3xl lg:text-4xl font-bold text-gray-800 mb-4">
+                <i class="fas fa-fire text-orange-500 mr-3"></i>Trending Skills
+            </h2>
+            <p class="text-lg text-gray-600">
+                Discover the most popular skills being shared by students
+            </p>
+        </div>
+        
+        {% if trending_skills %}
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                {% for skill in trending_skills %}
+                    <div class="skill-card bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-all border">
+                        <div class="flex items-start justify-between mb-4">
+                            <div class="flex-1">
+                                <h3 class="text-lg font-semibold text-gray-800 mb-2">{{ skill.name }}</h3>
+                                <span class="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded">{{ skill.category.name }}</span>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-xl font-bold text-blue-600">{{ skill.offered_count }}</div>
+                                <div class="text-xs text-gray-500">teacher{{ skill.offered_count|pluralize }}</div>
+                            </div>
+                        </div>
+                        
+                        <div class="flex justify-between items-center">
+                            <div class="flex items-center space-x-2">
+                                <i class="fas fa-fire text-orange-500 text-sm"></i>
+                                <span class="text-sm text-gray-600">Trending</span>
+                            </div>
+                            <a href="?skill={{ skill.id }}&find_teachers=1" class="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                                Find Teachers <i class="fas fa-arrow-right ml-1"></i>
+                            </a>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+            
+            <!-- Show More Button -->
+            <div class="text-center">
+                {% if user.is_authenticated %}
+                    <a href="{% url 'skills:trending_skills_more' %}" class="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-all">
+                        <i class="fas fa-arrow-right mr-2"></i>View More Skills
+                    </a>
+                {% else %}
+                    <a href="{% url 'accounts:login' %}" class="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-all">
+                        <i class="fas fa-sign-in-alt mr-2"></i>Login to View More Skills
+                    </a>
+                {% endif %}
+            </div>
+        {% else %}
+            <div class="text-center py-8">
+                <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-chart-line text-gray-400 text-2xl"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-800 mb-2">No Trending Skills Yet</h3>
+                <p class="text-gray-600 mb-4">Be the first to add your skills!</p>
+                <a href="{% url 'skills:add_skill' %}" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-all">
+                    <i class="fas fa-plus mr-2"></i>Add Your Skill
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</section>
+{% endif %}
+
+<!-- Skills Grid Section with Teachers -->
+{% if show_skills_grid and teachers_data %}
+<section class="py-16 bg-white" id="skills-grid">
+    <div class="container mx-auto px-4">
+        <div class="text-center mb-12">
+            <h2 class="text-3xl lg:text-4xl font-bold text-gray-800 mb-4">
+                <i class="fas fa-users text-blue-500 mr-3"></i>Available Teachers
+            </h2>
+            <p class="text-lg text-gray-600">
+                Connect with experienced teachers for your selected skills
+            </p>
+        </div>
+        
+        {% for skill_data in teachers_data %}
+            <div class="mb-12 last:mb-0">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-2xl font-bold text-gray-800">{{ skill_data.skill.name }}</h3>
+                    <span class="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
+                        {{ skill_data.skill.category.name }}
+                    </span>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {% for teacher_data in skill_data.teachers %}
+                    <div class="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-all border">
+                        <div class="flex items-center mb-4">
+                            <div class="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-lg font-bold">
+                                {{ teacher_data.user.first_name.0|default:teacher_data.user.username.0|upper }}
+                            </div>
+                            <div class="ml-3">
+                                <h4 class="font-semibold text-gray-800">
+                                    {{ teacher_data.user.first_name }} {{ teacher_data.user.last_name|default:teacher_data.user.username }}
+                                </h4>
+                                <div class="flex items-center">
+                                    {% for i in "12345" %}
+                                        {% if forloop.counter <= teacher_data.avg_rating|floatformat:0 %}
+                                            <i class="fas fa-star text-yellow-400 text-sm"></i>
+                                        {% else %}
+                                            <i class="far fa-star text-gray-300 text-sm"></i>
+                                        {% endif %}
+                                    {% endfor %}
+                                    <span class="text-xs text-gray-500 ml-1">{{ teacher_data.avg_rating|floatformat:1 }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <div class="flex flex-wrap gap-1 mb-2">
+                                <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                                    {{ teacher_data.offered_skill.get_proficiency_level_display }}
+                                </span>
+                                {% if teacher_data.offered_skill.years_of_experience %}
+                                <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
+                                    {{ teacher_data.offered_skill.years_of_experience }} years exp.
+                                </span>
+                                {% endif %}
+                            </div>
+                            {% if teacher_data.offered_skill.description %}
+                            <p class="text-sm text-gray-600 line-clamp-2">
+                                {{ teacher_data.offered_skill.description|truncatewords:15 }}
+                            </p>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="flex space-x-2">
+                            <a href="{% url 'skills:tutor_profile' teacher_data.user.id %}" 
+                               class="flex-1 bg-blue-600 text-white py-2 px-3 rounded-lg text-center text-sm hover:bg-blue-700 transition-colors">
+                                <i class="fas fa-user mr-1"></i>Profile
+                            </a>
+                            {% if user.is_authenticated and user != teacher_data.user %}
+                            <button onclick="requestTeacher({{ teacher_data.offered_skill.id }}, '{{ teacher_data.user.first_name|default:teacher_data.user.username }}')" 
+                                    class="flex-1 bg-green-600 text-white py-2 px-3 rounded-lg text-center text-sm hover:bg-green-700 transition-colors">
+                                <i class="fas fa-paper-plane mr-1"></i>Request
+                            </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                {% if skill_data.teachers|length == 6 %}
+                <div class="text-center mt-6">
+                    <a href="{% url 'skills:find_tutors' skill_data.skill.id %}" 
+                       class="text-blue-600 hover:text-blue-800 font-medium">
+                        View All Teachers for {{ skill_data.skill.name }} <i class="fas fa-arrow-right ml-1"></i>
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        {% endfor %}
+    </div>
+</section>
+{% elif show_skills_grid and not teachers_data %}
+<section class="py-16 bg-white" id="skills-grid">
+    <div class="container mx-auto px-4">
+        <div class="text-center">
+            <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-search text-gray-400 text-2xl"></i>
+            </div>
+            <h3 class="text-xl font-bold text-gray-800 mb-2">No Teachers Found</h3>
+            <p class="text-gray-600 mb-4">There are no teachers available for the selected skills yet.</p>
+            {% if user.is_authenticated %}
+                <a href="{% url 'skills:offered_add' %}" class="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-all">
+                    <i class="fas fa-plus mr-2"></i>Offer Your Skills
+                </a>
+            {% else %}
+                <a href="{% url 'accounts:register' %}" class="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-all">
+                    <i class="fas fa-user-plus mr-2"></i>Join to Teach Skills
+                </a>
+            {% endif %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Categories Section -->
+<section class="py-16 bg-gray-50">
+    <div class="container mx-auto px-4">
+        <div class="text-center mb-12">
+            <h2 class="text-3xl lg:text-4xl font-bold text-gray-800 mb-4">
+                Browse by Category
+            </h2>
+            <p class="text-lg text-gray-600">
+                Find skills organized by category to discover what interests you most
+            </p>
+        </div>
+        
+        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            {% for category in categories %}
+                <a href="?category={{ category.id }}" class="category-card bg-white p-6 rounded-xl text-center hover:shadow-lg transition-all transform hover:-translate-y-1">
+                    <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4" style="background-color: {{ category.color }}20;">
+                        <i class="{{ category.icon|default:'fas fa-star' }} text-2xl" style="color: {{ category.color }};"></i>
+                    </div>
+                    <h3 class="font-semibold text-gray-800 mb-2">{{ category.name }}</h3>
+                    <p class="text-sm text-gray-500">{{ category.skill_count }} skill{{ category.skill_count|pluralize }}</p>
+                </a>
+            {% empty %}
+                <div class="col-span-full text-center py-8">
+                    <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-layer-group text-gray-400 text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-2">No Categories Available</h3>
+                    <p class="text-gray-600 mb-4">Categories will appear here once skills are added.</p>
+                    {% if user.is_authenticated %}
+                        <a href="{% url 'skills:add_skill' %}" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-all">
+                            <i class="fas fa-plus mr-2"></i>Add Your Skill
+                        </a>
+                    {% else %}
+                        <a href="{% url 'accounts:register' %}" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-all">
+                            <i class="fas fa-user-plus mr-2"></i>Join to Add Skills
+                        </a>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="gradient-bg py-16">
+    <div class="container mx-auto px-4 text-center">
+        <div class="max-w-3xl mx-auto text-white">
+            <h2 class="text-3xl lg:text-4xl font-bold mb-6">
+                Ready to Share Your Skills?
+            </h2>
+            <p class="text-lg mb-8">
+                Join the community of skill sharers and learners. Add your skills and start connecting with fellow students today.
+            </p>
+            
+            {% if user.is_authenticated %}
+                <a href="{% url 'skills:add_skill' %}" 
+                   class="bg-white text-blue-600 px-8 py-4 rounded-lg font-semibold text-lg hover:bg-gray-100 transition-all transform hover:scale-105 shadow-lg inline-block">
+                    <i class="fas fa-plus mr-2"></i>Add Your Skills
+                </a>
+            {% else %}
+                <a href="{% url 'accounts:register' %}" 
+                   class="bg-white text-blue-600 px-8 py-4 rounded-lg font-semibold text-lg hover:bg-gray-100 transition-all transform hover:scale-105 shadow-lg inline-block">
+                    <i class="fas fa-user-plus mr-2"></i>Join to Share Skills
+                </a>
+            {% endif %}
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Smooth scrolling for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                target.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
+        });
+    });
+    
+    // Animation on scroll
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    };
+    
+    const observer = new IntersectionObserver(function(entries) {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('animate-fade-in');
+            }
+        });
+    }, observerOptions);
+    
+    // Observe skill cards and category cards
+    document.querySelectorAll('.skill-card, .category-card').forEach(card => {
+        observer.observe(card);
+    });
+    
+    
+    // Category dropdown change handler
+    document.getElementById('id_category').addEventListener('change', function() {
+        const categoryId = this.value;
+        const skillSelect = document.getElementById('id_skill');
+        
+        if (categoryId) {
+            skillSelect.disabled = true;
+            skillSelect.innerHTML = '<option value="">Loading skills...</option>';
+            
+            fetch(`{% url 'skills:get_skills_by_category_public' %}?category_id=${categoryId}`)
+                .then(response => response.json())
+                .then(data => {
+                    skillSelect.innerHTML = '<option value="">Select Skill...</option>';
+                    data.skills.forEach(skill => {
+                        skillSelect.innerHTML += `<option value="${skill.id}">${skill.name}</option>`;
+                    });
+                    skillSelect.disabled = false;
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    skillSelect.innerHTML = '<option value="">Error loading skills</option>';
+                    skillSelect.disabled = false;
+                });
+        } else {
+            skillSelect.innerHTML = '<option value="">Select Skill...</option>';
+            skillSelect.disabled = true;
+        }
+    });
+    
+    // Auto-submit form when sort option changes
+    document.querySelector('select[name="sort"]').addEventListener('change', function() {
+        this.closest('form').submit();
+    });
+    
+    // Handle teacher request
+    function requestTeacher(offeredSkillId, teacherName) {
+        if (confirm(`Send a skill request to ${teacherName}?`)) {
+            // You can implement AJAX request here or redirect to request form
+            window.location.href = `{% url 'skill_sessions:create_request' %}?offered_skill=${offeredSkillId}`;
+        }
+    }
+</script>
+
+<style>
+    .animate-fade-in {
+        animation: fadeInUp 0.6s ease-out forwards;
+    }
+    
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .skill-card:hover {
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    }
+    
+    .category-card:hover {
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    }
+</style>
+{% endblock %} 

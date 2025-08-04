@@ -1,0 +1,236 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Session Details - {{ session.skill.name }} - Campus Skill-Swap{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="gradient-bg relative overflow-hidden">
+    <div class="absolute inset-0 bg-black opacity-20"></div>
+    <div class="relative container mx-auto px-4 py-20">
+        <div class="text-center text-white">
+            <h1 class="text-4xl lg:text-5xl font-bold mb-6 leading-tight">
+                Session <span class="text-yellow-300">Details</span>
+            </h1>
+            <p class="text-lg lg:text-xl mb-8 max-w-3xl mx-auto">
+                View complete information about your skill swap session
+            </p>
+        </div>
+    </div>
+</section>
+
+<!-- Session Details Section -->
+<section class="py-16 bg-gray-50">
+    <div class="container mx-auto px-4 max-w-4xl">
+        <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+            <!-- Session Header -->
+            <div class="bg-gradient-to-r from-blue-600 to-purple-600 p-6 text-white">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="text-2xl font-bold mb-2">{{ session.skill.name }}</h2>
+                        <div class="flex items-center space-x-4">
+                            <span class="px-3 py-1 bg-white bg-opacity-20 rounded-full text-sm">
+                                {{ session.get_status_display }}
+                            </span>
+                            <span class="px-3 py-1 bg-white bg-opacity-20 rounded-full text-sm">
+                                {{ session.get_format_display }}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-sm opacity-90">Session ID</div>
+                        <div class="text-lg font-semibold">#{{ session.id }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Session Content -->
+            <div class="p-6">
+                <!-- Participants -->
+                <div class="mb-8">
+                    <h3 class="text-lg font-semibold mb-4 text-gray-800">Participants</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="flex items-center p-4 bg-green-50 rounded-lg border border-green-200">
+                            <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mr-4">
+                                <i class="fas fa-chalkboard-teacher text-green-600"></i>
+                            </div>
+                            <div>
+                                <div class="text-sm text-green-600 font-medium">Teacher</div>
+                                <div class="font-semibold">{{ session.teacher.get_full_name|default:session.teacher.username }}</div>
+                                <div class="text-sm text-gray-600">{{ session.teacher.email }}</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center p-4 bg-blue-50 rounded-lg border border-blue-200">
+                            <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mr-4">
+                                <i class="fas fa-user-graduate text-blue-600"></i>
+                            </div>
+                            <div>
+                                <div class="text-sm text-blue-600 font-medium">Learner</div>
+                                <div class="font-semibold">{{ session.learner.get_full_name|default:session.learner.username }}</div>
+                                <div class="text-sm text-gray-600">{{ session.learner.email }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Session Schedule -->
+                <div class="mb-8">
+                    <h3 class="text-lg font-semibold mb-4 text-gray-800">Schedule & Location</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="space-y-4">
+                            <div class="flex items-center">
+                                <i class="fas fa-calendar-alt text-gray-400 w-5 mr-3"></i>
+                                <div>
+                                    <div class="text-sm text-gray-600">Date & Time</div>
+                                    <div class="font-semibold">{{ session.scheduled_date|date:"F j, Y \a\t g:i A" }}</div>
+                                </div>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="fas fa-clock text-gray-400 w-5 mr-3"></i>
+                                <div>
+                                    <div class="text-sm text-gray-600">Duration</div>
+                                    <div class="font-semibold">{{ session.duration_minutes }} minutes</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="space-y-4">
+                            {% if session.format == 'online' %}
+                                <div class="flex items-center">
+                                    <i class="fas fa-video text-gray-400 w-5 mr-3"></i>
+                                    <div>
+                                        <div class="text-sm text-gray-600">Meeting Link</div>
+                                        {% if session.meeting_link %}
+                                            <a href="{{ session.meeting_link }}" class="text-blue-600 hover:text-blue-800 font-semibold" target="_blank">
+                                                Join Meeting
+                                                <i class="fas fa-external-link-alt ml-1 text-xs"></i>
+                                            </a>
+                                        {% else %}
+                                            <div class="text-gray-500">Link will be provided</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            {% else %}
+                                <div class="flex items-center">
+                                    <i class="fas fa-map-marker-alt text-gray-400 w-5 mr-3"></i>
+                                    <div>
+                                        <div class="text-sm text-gray-600">Location</div>
+                                        <div class="font-semibold">{{ session.location|default:"To be determined" }}</div>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Session Progress -->
+                {% if session.started_at or session.ended_at %}
+                <div class="mb-8">
+                    <h3 class="text-lg font-semibold mb-4 text-gray-800">Session Progress</h3>
+                    <div class="bg-gray-50 rounded-lg p-4">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            {% if session.started_at %}
+                            <div class="text-center">
+                                <div class="text-sm text-gray-600">Started At</div>
+                                <div class="font-semibold">{{ session.started_at|date:"g:i A" }}</div>
+                            </div>
+                            {% endif %}
+                            {% if session.ended_at %}
+                            <div class="text-center">
+                                <div class="text-sm text-gray-600">Ended At</div>
+                                <div class="font-semibold">{{ session.ended_at|date:"g:i A" }}</div>
+                            </div>
+                            {% endif %}
+                            {% if session.actual_duration %}
+                            <div class="text-center">
+                                <div class="text-sm text-gray-600">Actual Duration</div>
+                                <div class="font-semibold">{{ session.actual_duration }} minutes</div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Session Notes -->
+                {% if session.session_summary or session.teacher_notes or session.learner_notes %}
+                <div class="mb-8">
+                    <h3 class="text-lg font-semibold mb-4 text-gray-800">Session Notes</h3>
+                    {% if session.session_summary %}
+                    <div class="mb-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                        <div class="text-sm font-medium text-blue-800 mb-2">Session Summary</div>
+                        <div class="text-gray-700">{{ session.session_summary }}</div>
+                    </div>
+                    {% endif %}
+                    {% if session.teacher_notes and user == session.teacher %}
+                    <div class="mb-4 p-4 bg-green-50 rounded-lg border border-green-200">
+                        <div class="text-sm font-medium text-green-800 mb-2">Teacher Notes (Private)</div>
+                        <div class="text-gray-700">{{ session.teacher_notes }}</div>
+                    </div>
+                    {% endif %}
+                    {% if session.learner_notes and user == session.learner %}
+                    <div class="mb-4 p-4 bg-purple-50 rounded-lg border border-purple-200">
+                        <div class="text-sm font-medium text-purple-800 mb-2">Learner Notes (Private)</div>
+                        <div class="text-gray-700">{{ session.learner_notes }}</div>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+
+                <!-- Action Buttons -->
+                <div class="flex flex-wrap gap-4 pt-6 border-t">
+                    {% if session.status == 'scheduled' %}
+                        {% if session.scheduled_date > now %}
+                            <a href="{% url 'skill_sessions:session_edit' session.pk %}" 
+                               class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                                <i class="fas fa-edit mr-2"></i>Edit Session
+                            </a>
+                            <button onclick="cancelSession({{ session.id }})" 
+                                    class="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
+                                <i class="fas fa-times mr-2"></i>Cancel Session
+                            </button>
+                        {% endif %}
+                    {% endif %}
+                    
+                    {% if session.status == 'completed' %}
+                        <a href="{% url 'skill_sessions:leave_review' session.id %}" 
+                           class="px-6 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors">
+                            <i class="fas fa-star mr-2"></i>Leave Review
+                        </a>
+                    {% endif %}
+                    
+                    <a href="{% url 'skill_sessions:my_sessions' %}" 
+                       class="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors">
+                        <i class="fas fa-arrow-left mr-2"></i>Back to Sessions
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+function cancelSession(sessionId) {
+    if (confirm('Are you sure you want to cancel this session?')) {
+        fetch(`/sessions/${sessionId}/cancel/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error cancelling session: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while cancelling the session.');
+        });
+    }
+}
+</script>
+{% endblock %}

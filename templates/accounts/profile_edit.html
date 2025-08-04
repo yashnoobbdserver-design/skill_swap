@@ -1,0 +1,218 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Edit Profile | Campus Skill-Swap{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<section class="gradient-bg relative overflow-hidden">
+    <div class="absolute inset-0 bg-black opacity-20"></div>
+    <div class="relative container mx-auto px-4 py-16 lg:py-24">
+        <div class="text-center text-white">
+            <h1 class="text-4xl lg:text-5xl font-bold mb-4">Edit Profile</h1>
+            <p class="text-lg lg:text-xl mb-6">Update your information to help others find and connect with you</p>
+        </div>
+    </div>
+    
+    <!-- Floating elements -->
+    <div class="absolute top-20 left-10 w-20 h-20 bg-white opacity-10 rounded-full animate-bounce"></div>
+    <div class="absolute bottom-20 right-10 w-16 h-16 bg-yellow-300 opacity-20 rounded-full animate-pulse"></div>
+    <div class="absolute top-1/2 right-20 w-12 h-12 bg-green-400 opacity-15 rounded-full animate-bounce delay-75"></div>
+</section>
+
+<!-- Form Section -->
+<section class="py-12 bg-white">
+    <div class="container mx-auto px-4 max-w-4xl">
+        <div class="bg-white rounded-2xl shadow-lg p-8">
+            <div class="flex items-center justify-between mb-8">
+                <h2 class="text-2xl font-bold text-gray-800">Profile Information</h2>
+                <a href="{% url 'accounts:profile' %}" class="text-gray-600 hover:text-gray-800 transition-colors">
+                    <i class="fas fa-times mr-2"></i>Cancel
+                </a>
+            </div>
+            
+            <form method="post" enctype="multipart/form-data" class="space-y-6">
+                {% csrf_token %}
+                
+                {% if form.non_field_errors %}
+                    <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                        <div class="text-red-700">{{ form.non_field_errors }}</div>
+                    </div>
+                {% endif %}
+                
+                <!-- Basic Information -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="id_first_name" class="block text-sm font-semibold text-gray-600 mb-1">First Name</label>
+                        <input type="text" name="first_name" id="id_first_name" value="{{ user.first_name }}" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+                    <div>
+                        <label for="id_last_name" class="block text-sm font-semibold text-gray-600 mb-1">Last Name</label>
+                        <input type="text" name="last_name" id="id_last_name" value="{{ user.last_name }}" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+                </div>
+                
+                <!-- Profile Picture -->
+                <div>
+                    <label for="{{ form.profile_picture.id_for_label }}" class="block text-sm font-semibold text-gray-600 mb-1">Profile Picture</label>
+                    {{ form.profile_picture }}
+                    {% if form.profile_picture.errors %}
+                        <div class="text-red-600 text-sm mt-1">{{ form.profile_picture.errors.0 }}</div>
+                    {% endif %}
+                    {% if object.profile_picture %}
+                        <div class="mt-2">
+                            <img src="{{ object.profile_picture.url }}" alt="Current profile picture" class="w-20 h-20 rounded-full object-cover">
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <!-- University Email -->
+                <div>
+                    <label for="{{ form.university_email.id_for_label }}" class="block text-sm font-semibold text-gray-600 mb-1">University Email</label>
+                    {{ form.university_email }}
+                    {% if form.university_email.help_text %}
+                        <p class="text-sm text-gray-500 mt-1">{{ form.university_email.help_text }}</p>
+                    {% endif %}
+                    {% if form.university_email.errors %}
+                        <div class="text-red-600 text-sm mt-1">{{ form.university_email.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                
+                <!-- Department and Branch -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="{{ form.department.id_for_label }}" class="block text-sm font-semibold text-gray-600 mb-1">Department</label>
+                        {{ form.department }}
+                        {% if form.department.errors %}
+                            <div class="text-red-600 text-sm mt-1">{{ form.department.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <label for="{{ form.branch.id_for_label }}" class="block text-sm font-semibold text-gray-600 mb-1">Branch</label>
+                        {{ form.branch }}
+                        {% if form.branch.errors %}
+                            <div class="text-red-600 text-sm mt-1">{{ form.branch.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Year -->
+                <div>
+                    <label for="{{ form.year.id_for_label }}" class="block text-sm font-semibold text-gray-600 mb-1">Academic Year</label>
+                    {{ form.year }}
+                    {% if form.year.errors %}
+                        <div class="text-red-600 text-sm mt-1">{{ form.year.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                
+                <!-- Bio -->
+                <div>
+                    <label for="{{ form.bio.id_for_label }}" class="block text-sm font-semibold text-gray-600 mb-1">Bio</label>
+                    {{ form.bio }}
+                    {% if form.bio.help_text %}
+                        <p class="text-sm text-gray-500 mt-1">{{ form.bio.help_text }}</p>
+                    {% endif %}
+                    {% if form.bio.errors %}
+                        <div class="text-red-600 text-sm mt-1">{{ form.bio.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                
+                <!-- Availability -->
+                <div>
+                    <label for="{{ form.availability.id_for_label }}" class="block text-sm font-semibold text-gray-600 mb-1">Availability</label>
+                    {{ form.availability }}
+                    {% if form.availability.help_text %}
+                        <p class="text-sm text-gray-500 mt-1">{{ form.availability.help_text }}</p>
+                    {% endif %}
+                    {% if form.availability.errors %}
+                        <div class="text-red-600 text-sm mt-1">{{ form.availability.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                
+                <!-- Preferences -->
+                <div class="bg-gray-50 p-6 rounded-lg">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Learning Preferences</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="flex items-center space-x-3">
+                                {{ form.prefer_in_person }}
+                                <span class="text-gray-700">I prefer in-person sessions</span>
+                            </label>
+                        </div>
+                        <div>
+                            <label class="flex items-center space-x-3">
+                                {{ form.prefer_online }}
+                                <span class="text-gray-700">I prefer online sessions</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Notification Preferences -->
+                <div class="bg-gray-50 p-6 rounded-lg">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Notification Preferences</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="flex items-center space-x-3">
+                                {{ form.notification_email }}
+                                <span class="text-gray-700">Send email notifications</span>
+                            </label>
+                        </div>
+                        <div>
+                            <label class="flex items-center space-x-3">
+                                {{ form.notification_in_app }}
+                                <span class="text-gray-700">Show in-app notifications</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Submit Buttons -->
+                <div class="flex justify-end space-x-4 pt-6">
+                    <a href="{% url 'accounts:profile' %}" class="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 font-semibold hover:bg-gray-50 transition-all">
+                        Cancel
+                    </a>
+                    <button type="submit" class="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-all">
+                        <i class="fas fa-save mr-2"></i>Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Handle department/branch dependency
+    $('#id_department').change(function() {
+        var departmentId = $(this).val();
+        var branchSelect = $('#id_branch');
+        
+        if (departmentId) {
+            $.ajax({
+                url: '{% url "accounts:get_branches" %}',
+                data: {'department_id': departmentId},
+                success: function(response) {
+                    branchSelect.html('<option value="">Select a branch...</option>');
+                    $.each(response.branches, function(index, branch) {
+                        branchSelect.append('<option value="' + branch.id + '">' + branch.name + '</option>');
+                    });
+                },
+                error: function() {
+                    branchSelect.html('<option value="">Error loading branches</option>');
+                }
+            });
+        } else {
+            branchSelect.html('<option value="">First select a department...</option>');
+        }
+    });
+    
+    // Style the form fields
+    $('select, input[type="email"], input[type="text"], textarea').addClass('w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent');
+    $('input[type="checkbox"]').addClass('form-checkbox h-5 w-5 text-blue-600');
+    $('input[type="file"]').addClass('w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white');
+});
+</script>
+{% endblock %}

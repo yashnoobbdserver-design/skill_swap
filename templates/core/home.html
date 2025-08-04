@@ -1,0 +1,574 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Campus Skill-Swap - Connect, Learn, Grow{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="gradient-bg relative overflow-hidden">
+    <div class="absolute inset-0 bg-black opacity-20"></div>
+    <div class="relative container mx-auto px-4 py-20 lg:py-32">
+        <div class="text-center text-white">
+            <h1 class="text-4xl lg:text-6xl font-bold mb-6 leading-tight">
+                Share Skills, <span class="text-yellow-300">Learn Together</span>
+            </h1>
+            <p class="text-lg lg:text-xl mb-8 max-w-3xl mx-auto">
+                Join the largest campus community where students exchange knowledge, learn new skills, and grow together. 
+                No money required - just your passion to teach and learn.
+            </p>
+            
+            {% if not user.is_authenticated %}
+                <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                    <a href="{% url 'accounts:register' %}" 
+                       class="bg-white text-blue-600 px-8 py-4 rounded-lg font-semibold text-lg hover:bg-gray-100 transition-all transform hover:scale-105 shadow-lg">
+                        <i class="fas fa-user-plus mr-2"></i>Join Now - It's Free
+                    </a>
+                    <a href="{% url 'accounts:login' %}" 
+                       class="border-2 border-white text-white px-8 py-4 rounded-lg font-semibold text-lg hover:bg-white hover:text-blue-600 transition-all">
+                        <i class="fas fa-sign-in-alt mr-2"></i>Sign In
+                    </a>
+                </div>
+            {% else %}
+                <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                    <a href="{% url 'core:dashboard' %}" 
+                       class="bg-white text-blue-600 px-8 py-4 rounded-lg font-semibold text-lg hover:bg-gray-100 transition-all transform hover:scale-105 shadow-lg">
+                        <i class="fas fa-tachometer-alt mr-2"></i>Go to Dashboard
+                    </a>
+                    <a href="{% url 'core:requests' %}" 
+                       class="border-2 border-white text-white px-8 py-4 rounded-lg font-semibold text-lg hover:bg-white hover:text-blue-600 transition-all">
+                        <i class="fas fa-exchange-alt mr-2"></i>View Requests
+                    </a>
+                </div>
+            {% endif %}
+            
+            <!-- Stats -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mt-16 max-w-4xl mx-auto">
+                <div class="text-center">
+                    <div class="text-3xl font-bold">{{ stats.total_users|default:"0" }}+</div>
+                    <div class="text-blue-200">Active Students</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-3xl font-bold">{{ stats.total_skills|default:"0" }}+</div>
+                    <div class="text-blue-200">Skills Available</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-3xl font-bold">{{ stats.total_sessions|default:"0" }}+</div>
+                    <div class="text-blue-200">Sessions Completed</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-3xl font-bold">4.8/5</div>
+                    <div class="text-blue-200">Average Rating</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Floating elements for visual appeal -->
+    <div class="absolute top-20 left-10 w-20 h-20 bg-white opacity-10 rounded-full animate-bounce"></div>
+    <div class="absolute bottom-20 right-10 w-16 h-16 bg-yellow-300 opacity-20 rounded-full animate-pulse"></div>
+    <div class="absolute top-1/2 right-20 w-12 h-12 bg-green-400 opacity-15 rounded-full animate-bounce delay-75"></div>
+</section>
+
+<!-- Features Section -->
+<section id="features" class="py-16 bg-white">
+    <div class="container mx-auto px-4">
+        <div class="text-center mb-16">
+            <h2 class="text-3xl lg:text-4xl font-bold text-gray-800 mb-4">
+                How It Works
+            </h2>
+            <p class="text-lg text-gray-600 max-w-2xl mx-auto">
+                Simple, effective, and completely free. Start learning and sharing skills in just a few clicks.
+            </p>
+        </div>
+        
+        <div class="grid md:grid-cols-3 gap-8">
+            <!-- Feature 1 -->
+            <div class="text-center group">
+                <div class="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:bg-blue-200 transition-colors">
+                    <i class="fas fa-user-plus text-blue-600 text-2xl"></i>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-800 mb-4">1. Create Your Profile</h3>
+                <p class="text-gray-600">
+                    Sign up with your university email, add your skills, and tell others what you'd like to learn.
+                </p>
+            </div>
+            
+            <!-- Feature 2 -->
+            <div class="text-center group">
+                <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:bg-green-200 transition-colors">
+                    <i class="fas fa-search text-green-600 text-2xl"></i>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-800 mb-4">2. Find Your Match</h3>
+                <p class="text-gray-600">
+                    Browse other students' skills or let our smart matching system suggest perfect learning partners.
+                </p>
+            </div>
+            
+            <!-- Feature 3 -->
+            <div class="text-center group">
+                <div class="w-20 h-20 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:bg-purple-200 transition-colors">
+                    <i class="fas fa-handshake text-purple-600 text-2xl"></i>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-800 mb-4">3. Start Learning</h3>
+                <p class="text-gray-600">
+                    Schedule sessions, meet online or in-person, and exchange knowledge with your peers.
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Popular Skills Section -->
+<section class="py-16 bg-gray-50">
+    <div class="container mx-auto px-4">
+        <div class="text-center mb-12">
+            <h2 class="text-3xl lg:text-4xl font-bold text-gray-800 mb-4">
+                Popular Skills
+            </h2>
+            <p class="text-lg text-gray-600">
+                Discover what your peers are learning and sharing
+            </p>
+        </div>
+        
+        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            {% for skill in popular_skills %}
+                <div class="skill-card bg-white p-4 rounded-lg text-center hover:shadow-lg transition-all">
+                    <div class="w-12 h-12 bg-{{ skill.category.color|default:'blue' }}-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <i class="{{ skill.category.icon|default:'fas fa-star' }} text-{{ skill.category.color|default:'blue' }}-600"></i>
+                    </div>
+                    <h4 class="font-semibold text-gray-800 text-sm">{{ skill.name }}</h4>
+                    <p class="text-xs text-gray-500 mt-1">{{ skill.offered_count }} teacher{{ skill.offered_count|pluralize }}</p>
+                </div>
+            {% empty %}
+                <!-- Fallback if no skills data -->
+                <div class="skill-card bg-white p-4 rounded-lg text-center">
+                    <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <i class="fas fa-code text-blue-600"></i>
+                    </div>
+                    <h4 class="font-semibold text-gray-800 text-sm">Programming</h4>
+                    <p class="text-xs text-gray-500 mt-1">50+ teachers</p>
+                </div>
+                <div class="skill-card bg-white p-4 rounded-lg text-center">
+                    <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <i class="fas fa-language text-green-600"></i>
+                    </div>
+                    <h4 class="font-semibold text-gray-800 text-sm">Languages</h4>
+                    <p class="text-xs text-gray-500 mt-1">35+ teachers</p>
+                </div>
+                <div class="skill-card bg-white p-4 rounded-lg text-center">
+                    <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <i class="fas fa-palette text-purple-600"></i>
+                    </div>
+                    <h4 class="font-semibold text-gray-800 text-sm">Design</h4>
+                    <p class="text-xs text-gray-500 mt-1">28+ teachers</p>
+                </div>
+                <div class="skill-card bg-white p-4 rounded-lg text-center">
+                    <div class="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <i class="fas fa-calculator text-yellow-600"></i>
+                    </div>
+                    <h4 class="font-semibold text-gray-800 text-sm">Mathematics</h4>
+                    <p class="text-xs text-gray-500 mt-1">42+ teachers</p>
+                </div>
+                <div class="skill-card bg-white p-4 rounded-lg text-center">
+                    <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <i class="fas fa-music text-red-600"></i>
+                    </div>
+                    <h4 class="font-semibold text-gray-800 text-sm">Music</h4>
+                    <p class="text-xs text-gray-500 mt-1">25+ teachers</p>
+                </div>
+                <div class="skill-card bg-white p-4 rounded-lg text-center">
+                    <div class="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <i class="fas fa-chart-bar text-indigo-600"></i>
+                    </div>
+                    <h4 class="font-semibold text-gray-800 text-sm">Business</h4>
+                    <p class="text-xs text-gray-500 mt-1">30+ teachers</p>
+                </div>
+            {% endfor %}
+        </div>
+        
+        <div class="text-center mt-8">
+            <a href="{% url 'skills:skill_list' %}" class="btn-primary-custom px-6 py-3 text-white rounded-lg font-semibold hover:shadow-lg transition-all">
+                <i class="fas fa-eye mr-2"></i>Explore All Skills
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- Testimonials Section -->
+<section class="py-16 bg-white">
+    <div class="container mx-auto px-4">
+        <div class="text-center mb-12">
+            <h2 class="text-3xl lg:text-4xl font-bold text-gray-800 mb-4">
+                What Students Say
+            </h2>
+            <p class="text-lg text-gray-600">
+                Real experiences from our community members
+            </p>
+        </div>
+        
+        <div class="grid md:grid-cols-3 gap-8">
+            <!-- Testimonial 1 -->
+            <div class="bg-gray-50 p-6 rounded-lg">
+                <div class="flex items-center mb-4">
+                    <div class="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center text-white font-semibold">
+                        AS
+                    </div>
+                    <div class="ml-4">
+                        <h4 class="font-semibold text-gray-800">Alex Smith</h4>
+                        <p class="text-sm text-gray-600">Computer Science Major</p>
+                    </div>
+                    <div class="ml-auto flex text-yellow-400">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                    </div>
+                </div>
+                <p class="text-gray-700 italic">
+                    "I learned Spanish from Maria in just a few weeks! The platform made it so easy to find someone 
+                    passionate about sharing knowledge. In return, I helped her with programming. Win-win!"
+                </p>
+            </div>
+            
+            <!-- Testimonial 2 -->
+            <div class="bg-gray-50 p-6 rounded-lg">
+                <div class="flex items-center mb-4">
+                    <div class="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center text-white font-semibold">
+                        MJ
+                    </div>
+                    <div class="ml-4">
+                        <h4 class="font-semibold text-gray-800">Maria Johnson</h4>
+                        <p class="text-sm text-gray-600">Art Major</p>
+                    </div>
+                    <div class="ml-auto flex text-yellow-400">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                    </div>
+                </div>
+                <p class="text-gray-700 italic">
+                    "Amazing community! I've taught digital art to 5 students and learned guitar and photography. 
+                    The variety of skills available is incredible."
+                </p>
+            </div>
+            
+            <!-- Testimonial 3 -->
+            <div class="bg-gray-50 p-6 rounded-lg">
+                <div class="flex items-center mb-4">
+                    <div class="w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center text-white font-semibold">
+                        DL
+                    </div>
+                    <div class="ml-4">
+                        <h4 class="font-semibold text-gray-800">David Lee</h4>
+                        <p class="text-sm text-gray-600">Business Major</p>
+                    </div>
+                    <div class="ml-auto flex text-yellow-400">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                    </div>
+                </div>
+                <p class="text-gray-700 italic">
+                    "The matching system is brilliant! It connected me with students who needed help with business strategy 
+                    while I learned web development. Great platform for mutual learning."
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="gradient-bg py-16">
+    <div class="container mx-auto px-4 text-center">
+        <div class="max-w-3xl mx-auto text-white">
+            <h2 class="text-3xl lg:text-4xl font-bold mb-6">
+                Ready to Start Your Learning Journey?
+            </h2>
+            <p class="text-lg mb-8">
+                Join thousands of students who are already sharing knowledge and growing together. 
+                It's completely free and takes less than 2 minutes to get started.
+            </p>
+            
+            {% if not user.is_authenticated %}
+                <a href="{% url 'accounts:register' %}" 
+                   class="bg-white text-blue-600 px-8 py-4 rounded-lg font-semibold text-lg hover:bg-gray-100 transition-all transform hover:scale-105 shadow-lg inline-block">
+                    <i class="fas fa-rocket mr-2"></i>Get Started Today
+                </a>
+            {% else %}
+                <a href="{% url 'core:dashboard' %}" 
+                   class="bg-white text-blue-600 px-8 py-4 rounded-lg font-semibold text-lg hover:bg-gray-100 transition-all transform hover:scale-105 shadow-lg inline-block">
+                    <i class="fas fa-tachometer-alt mr-2"></i>Continue Learning
+                </a>
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+<!-- About Section -->
+<section id="about" class="py-16 bg-gray-50">
+    <div class="container mx-auto px-4">
+        <div class="max-w-4xl mx-auto">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl lg:text-4xl font-bold text-gray-800 mb-4">
+                    About Campus Skill-Swap
+                </h2>
+                <p class="text-lg text-gray-600">
+                    Building stronger campus communities through peer-to-peer learning
+                </p>
+            </div>
+            
+            <div class="grid md:grid-cols-2 gap-12 items-center">
+                <div>
+                    <h3 class="text-2xl font-bold text-gray-800 mb-4">Our Mission</h3>
+                    <p class="text-gray-600 mb-6">
+                        We believe that every student has unique skills and knowledge to share. Our platform breaks down 
+                        barriers to learning by creating a collaborative environment where students can teach and learn 
+                        from each other without any monetary exchange.
+                    </p>
+                    
+                    <div class="space-y-4">
+                        <div class="flex items-start">
+                            <i class="fas fa-check-circle text-green-500 mt-1 mr-3"></i>
+                            <div>
+                                <h4 class="font-semibold text-gray-800">Free for All Students</h4>
+                                <p class="text-gray-600 text-sm">No fees, no subscriptions - just pure knowledge exchange</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-start">
+                            <i class="fas fa-check-circle text-green-500 mt-1 mr-3"></i>
+                            <div>
+                                <h4 class="font-semibold text-gray-800">Safe & Verified</h4>
+                                <p class="text-gray-600 text-sm">University email verification ensures a trusted community</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-start">
+                            <i class="fas fa-check-circle text-green-500 mt-1 mr-3"></i>
+                            <div>
+                                <h4 class="font-semibold text-gray-800">Flexible Learning</h4>
+                                <p class="text-gray-600 text-sm">Online or in-person sessions that fit your schedule</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="text-center">
+                    <div class="bg-white p-8 rounded-lg shadow-lg">
+                        <div class="text-4xl font-bold text-blue-600 mb-2">100%</div>
+                        <div class="text-gray-800 font-semibold mb-4">Free Platform</div>
+                        
+                        <div class="text-3xl font-bold text-green-600 mb-2">4.8/5</div>
+                        <div class="text-gray-800 font-semibold mb-4">User Satisfaction</div>
+                        
+                        <div class="text-3xl font-bold text-purple-600 mb-2">24/7</div>
+                        <div class="text-gray-800 font-semibold">Available Access</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Skills and Students Section -->
+<section id="skills-students" class="py-16 bg-white">
+    <div class="container mx-auto px-4">
+        <div class="text-center mb-16">
+            <h2 class="text-3xl lg:text-4xl font-bold text-gray-800 mb-4">
+                Explore Skills & Connect with Students
+            </h2>
+            <p class="text-lg text-gray-600 max-w-3xl mx-auto">
+                Discover a diverse range of skills shared by talented students and find the perfect learning partner for your journey.
+            </p>
+        </div>
+        
+        <div class="grid lg:grid-cols-2 gap-12 items-center">
+            <!-- Skills Section -->
+            <div class="space-y-8">
+                <div class="text-center lg:text-left">
+                    <div class="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto lg:mx-0 mb-6">
+                        <i class="fas fa-graduation-cap text-blue-600 text-3xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-800 mb-4">Browse Skills</h3>
+                    <p class="text-gray-600 mb-6">
+                        Explore thousands of skills shared by your fellow students. From programming and languages to music and design, 
+                        find exactly what you want to learn or teach.
+                    </p>
+                    
+                    <div class="grid grid-cols-2 gap-4 mb-6">
+                        <div class="bg-gray-50 p-4 rounded-lg text-center">
+                            <div class="text-2xl font-bold text-blue-600">{{ stats.total_skills|default:"500+" }}</div>
+                            <div class="text-sm text-gray-600">Skills Available</div>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-lg text-center">
+                            <div class="text-2xl font-bold text-green-600">{{ stats.total_categories|default:"20+" }}</div>
+                            <div class="text-sm text-gray-600">Categories</div>
+                        </div>
+                    </div>
+                    
+                    <a href="{% url 'skills:skill_list' %}" class="btn-primary-custom px-8 py-3 text-white rounded-lg font-semibold hover:shadow-lg transition-all inline-block">
+                        <i class="fas fa-search mr-2"></i>Browse All Skills
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Students Section -->
+            <div class="space-y-8">
+                <div class="text-center lg:text-left">
+                    <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto lg:mx-0 mb-6">
+                        <i class="fas fa-users text-green-600 text-3xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-800 mb-4">Connect with Students</h3>
+                    <p class="text-gray-600 mb-6">
+                        Meet talented students from your campus. Browse profiles, see their skills, ratings, and experience. 
+                        Find the perfect learning partner or someone to share your knowledge with.
+                    </p>
+                    
+                    <div class="grid grid-cols-2 gap-4 mb-6">
+                        <div class="bg-gray-50 p-4 rounded-lg text-center">
+                            <div class="text-2xl font-bold text-green-600">{{ stats.total_users|default:"1000+" }}</div>
+                            <div class="text-sm text-gray-600">Active Students</div>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-lg text-center">
+                            <div class="text-2xl font-bold text-purple-600">{{ stats.total_departments|default:"15+" }}</div>
+                            <div class="text-sm text-gray-600">Departments</div>
+                        </div>
+                    </div>
+                    
+                    <a href="{% url 'core:requests' %}" class="btn-primary-custom px-8 py-3 text-white rounded-lg font-semibold hover:shadow-lg transition-all inline-block">
+                        <i class="fas fa-exchange-alt mr-2"></i>View Requests
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Quick Stats Row -->
+        <div class="mt-16 grid grid-cols-2 md:grid-cols-4 gap-6">
+            <div class="bg-gradient-to-br from-blue-500 to-blue-600 text-white p-6 rounded-xl text-center">
+                <div class="text-3xl font-bold mb-2">{{ stats.total_sessions|default:"2000+" }}</div>
+                <div class="text-blue-100">Sessions Completed</div>
+            </div>
+            <div class="bg-gradient-to-br from-green-500 to-green-600 text-white p-6 rounded-xl text-center">
+                <div class="text-3xl font-bold mb-2">4.8/5</div>
+                <div class="text-green-100">Average Rating</div>
+            </div>
+            <div class="bg-gradient-to-br from-purple-500 to-purple-600 text-white p-6 rounded-xl text-center">
+                <div class="text-3xl font-bold mb-2">{{ stats.total_users|default:"800+" }}</div>
+                <div class="text-purple-100">Active Users</div>
+            </div>
+            <div class="bg-gradient-to-br from-yellow-500 to-yellow-600 text-white p-6 rounded-xl text-center">
+                <div class="text-3xl font-bold mb-2">{{ stats.total_learners|default:"1200+" }}</div>
+                <div class="text-yellow-100">Active Learners</div>
+            </div>
+        </div>
+        
+        <!-- Featured Categories -->
+        <div class="mt-16">
+            <h3 class="text-2xl font-bold text-gray-800 text-center mb-8">Popular Categories</h3>
+            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                <div class="category-card bg-white p-4 rounded-xl text-center hover:shadow-lg transition-all transform hover:-translate-y-1 border border-gray-200">
+                    <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <i class="fas fa-code text-blue-600"></i>
+                    </div>
+                    <h4 class="font-semibold text-gray-800 text-sm">Technology</h4>
+                    <p class="text-xs text-gray-500 mt-1">150+ skills</p>
+                </div>
+                <div class="category-card bg-white p-4 rounded-xl text-center hover:shadow-lg transition-all transform hover:-translate-y-1 border border-gray-200">
+                    <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <i class="fas fa-language text-green-600"></i>
+                    </div>
+                    <h4 class="font-semibold text-gray-800 text-sm">Languages</h4>
+                    <p class="text-xs text-gray-500 mt-1">80+ skills</p>
+                </div>
+                <div class="category-card bg-white p-4 rounded-xl text-center hover:shadow-lg transition-all transform hover:-translate-y-1 border border-gray-200">
+                    <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <i class="fas fa-palette text-purple-600"></i>
+                    </div>
+                    <h4 class="font-semibold text-gray-800 text-sm">Arts & Design</h4>
+                    <p class="text-xs text-gray-500 mt-1">120+ skills</p>
+                </div>
+                <div class="category-card bg-white p-4 rounded-xl text-center hover:shadow-lg transition-all transform hover:-translate-y-1 border border-gray-200">
+                    <div class="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <i class="fas fa-calculator text-yellow-600"></i>
+                    </div>
+                    <h4 class="font-semibold text-gray-800 text-sm">Mathematics</h4>
+                    <p class="text-xs text-gray-500 mt-1">90+ skills</p>
+                </div>
+                <div class="category-card bg-white p-4 rounded-xl text-center hover:shadow-lg transition-all transform hover:-translate-y-1 border border-gray-200">
+                    <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <i class="fas fa-music text-red-600"></i>
+                    </div>
+                    <h4 class="font-semibold text-gray-800 text-sm">Music</h4>
+                    <p class="text-xs text-gray-500 mt-1">60+ skills</p>
+                </div>
+                <div class="category-card bg-white p-4 rounded-xl text-center hover:shadow-lg transition-all transform hover:-translate-y-1 border border-gray-200">
+                    <div class="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <i class="fas fa-chart-bar text-indigo-600"></i>
+                    </div>
+                    <h4 class="font-semibold text-gray-800 text-sm">Business</h4>
+                    <p class="text-xs text-gray-500 mt-1">100+ skills</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Smooth scrolling for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                target.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
+        });
+    });
+    
+    // Animation on scroll
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    };
+    
+    const observer = new IntersectionObserver(function(entries) {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('animate-fade-in');
+            }
+        });
+    }, observerOptions);
+    
+    // Observe skill cards and category cards
+    document.querySelectorAll('.skill-card, .category-card').forEach(card => {
+        observer.observe(card);
+    });
+</script>
+
+<style>
+    .animate-fade-in {
+        animation: fadeInUp 0.6s ease-out forwards;
+    }
+    
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>
+{% endblock %}

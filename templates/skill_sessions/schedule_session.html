@@ -1,0 +1,302 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Schedule Session{% endblock %}
+
+{% block extra_css %}
+<style>
+    .schedule-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+    
+    .schedule-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
+    
+    .session-info {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-label {
+        display: block;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 0.5rem;
+    }
+    
+    .form-input {
+        width: 100%;
+        padding: 0.75rem;
+        border: 2px solid #e5e7eb;
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: border-color 0.3s ease;
+    }
+    
+    .form-input:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+    
+    .form-select {
+        width: 100%;
+        padding: 0.75rem;
+        border: 2px solid #e5e7eb;
+        border-radius: 8px;
+        font-size: 1rem;
+        background-color: white;
+        transition: border-color 0.3s ease;
+    }
+    
+    .form-textarea {
+        width: 100%;
+        padding: 0.75rem;
+        border: 2px solid #e5e7eb;
+        border-radius: 8px;
+        font-size: 1rem;
+        min-height: 100px;
+        resize: vertical;
+        transition: border-color 0.3s ease;
+    }
+    
+    .btn {
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-block;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        border: none;
+        font-size: 1rem;
+    }
+    
+    .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+    
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+    }
+    
+    .btn-secondary {
+        background: #6b7280;
+        color: white;
+    }
+    
+    .btn-secondary:hover {
+        background: #4b5563;
+    }
+    
+    .alert {
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+    }
+    
+    .alert-error {
+        background: #fef2f2;
+        color: #dc2626;
+        border: 1px solid #fecaca;
+    }
+    
+    .format-info {
+        background: #f3f4f6;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-top: 0.5rem;
+        font-size: 0.875rem;
+        color: #6b7280;
+    }
+    
+    .user-info {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+    
+    .user-avatar {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 1rem;
+        font-size: 1.25rem;
+        font-weight: bold;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="schedule-container">
+    <div class="session-info">
+        <h2 class="text-2xl font-bold mb-4">
+            <i class="fas fa-calendar-plus mr-2"></i>Schedule Your Session
+        </h2>
+        
+        <div class="user-info">
+            <div class="user-avatar">
+                {{ skill_request.recipient.first_name|first|upper }}{{ skill_request.recipient.last_name|first|upper }}
+            </div>
+            <div>
+                <div class="font-semibold">{{ skill_request.recipient.get_full_name }}</div>
+                <div class="opacity-80">Teaching: {{ skill_request.offered_skill.skill.name }}</div>
+            </div>
+        </div>
+        
+        <div class="user-info">
+            <div class="user-avatar">
+                {{ skill_request.requester.first_name|first|upper }}{{ skill_request.requester.last_name|first|upper }}
+            </div>
+            <div>
+                <div class="font-semibold">{{ skill_request.requester.get_full_name }}</div>
+                <div class="opacity-80">Learning: {{ skill_request.offered_skill.skill.name }}</div>
+            </div>
+        </div>
+        
+        {% if skill_request.message %}
+        <div class="mt-4 p-3 bg-white bg-opacity-20 rounded-lg">
+            <strong>Request Message:</strong> {{ skill_request.message }}
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="schedule-card">
+        <h3 class="text-xl font-bold mb-4 text-gray-800">Session Details</h3>
+        
+        {% if form.errors %}
+            <div class="alert alert-error">
+                <strong>Please fix the following errors:</strong>
+                <ul class="mt-2">
+                    {% for field, errors in form.errors.items %}
+                        {% for error in errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+        
+        <form method="post" class="space-y-6">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label for="{{ form.scheduled_date.id_for_label }}" class="form-label">
+                    <i class="fas fa-calendar mr-2"></i>Date & Time
+                </label>
+                {{ form.scheduled_date }}
+                <div class="format-info">
+                    Choose a date and time that works for both participants. Make sure to consider time zones if this is an online session.
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="{{ form.duration_minutes.id_for_label }}" class="form-label">
+                    <i class="fas fa-clock mr-2"></i>Duration (minutes)
+                </label>
+                {{ form.duration_minutes }}
+                <div class="format-info">
+                    Recommended: 60-90 minutes for most skills. Adjust based on the complexity of the topic.
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="{{ form.format.id_for_label }}" class="form-label">
+                    <i class="fas fa-laptop mr-2"></i>Session Format
+                </label>
+                {{ form.format }}
+                <div class="format-info" id="format-info">
+                    Choose whether the session will be conducted online or in person.
+                </div>
+            </div>
+            
+            <div class="form-group" id="location-group">
+                <label for="{{ form.location.id_for_label }}" class="form-label">
+                    <i class="fas fa-map-marker-alt mr-2"></i>Location
+                </label>
+                {{ form.location }}
+                <div class="format-info">
+                    For in-person sessions: Specify the meeting location (e.g., "Central Library, Study Room A").
+                </div>
+            </div>
+            
+            <div class="form-group" id="meeting-link-group" style="display: none;">
+                <label for="{{ form.meeting_link.id_for_label }}" class="form-label">
+                    <i class="fas fa-video mr-2"></i>Meeting Link
+                </label>
+                {{ form.meeting_link }}
+                <div class="format-info">
+                    Provide a video call link (Google Meet, Zoom, etc.). This will be shared with the learner.
+                </div>
+            </div>
+            
+            <div class="flex gap-4 pt-6">
+                <button type="submit" class="btn btn-primary flex-1">
+                    <i class="fas fa-check mr-2"></i>Schedule Session
+                </button>
+                <a href="{% url 'skill_sessions:request_management' %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left mr-2"></i>Back
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const formatField = document.getElementById('id_format');
+    const locationGroup = document.getElementById('location-group');
+    const meetingLinkGroup = document.getElementById('meeting-link-group');
+    const formatInfo = document.getElementById('format-info');
+    
+    function toggleFields() {
+        const isOnline = formatField.value === 'online';
+        
+        if (isOnline) {
+            locationGroup.style.display = 'none';
+            meetingLinkGroup.style.display = 'block';
+            formatInfo.textContent = 'Online sessions require a meeting link. Location field will be hidden.';
+        } else {
+            locationGroup.style.display = 'block';
+            meetingLinkGroup.style.display = 'none';
+            formatInfo.textContent = 'In-person sessions require a location. Meeting link field will be hidden.';
+        }
+    }
+    
+    // Initial toggle
+    toggleFields();
+    
+    // Listen for changes
+    formatField.addEventListener('change', toggleFields);
+    
+    // Set minimum date to today
+    const dateField = document.getElementById('id_scheduled_date');
+    if (dateField) {
+        const now = new Date();
+        const offset = now.getTimezoneOffset() * 60000;
+        const localISOTime = (new Date(now - offset)).toISOString().slice(0, 16);
+        dateField.min = localISOTime;
+    }
+});
+</script>
+{% endblock %}

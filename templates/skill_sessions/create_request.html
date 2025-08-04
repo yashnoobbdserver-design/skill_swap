@@ -1,0 +1,146 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Create Skill Request | Campus Skill-Swap{% endblock %}
+
+{% block content %}
+<section class="gradient-bg relative overflow-hidden">
+    <div class="absolute inset-0 bg-black opacity-20"></div>
+    <div class="relative container mx-auto px-4 py-16 lg:py-24">
+        <div class="text-center text-white">
+            <h1 class="text-4xl lg:text-5xl font-bold mb-4">Request a Skill Session</h1>
+            <p class="text-lg lg:text-xl mb-6">
+                {% if offered_skill %}
+                    Send a request to learn {{ offered_skill.skill.name }} from {{ recipient.get_full_name|default:recipient.username }}
+                {% else %}
+                    Create a new skill learning request
+                {% endif %}
+            </p>
+        </div>
+    </div>
+    <div class="absolute top-20 left-10 w-20 h-20 bg-white opacity-10 rounded-full animate-bounce"></div>
+    <div class="absolute bottom-20 right-10 w-16 h-16 bg-yellow-300 opacity-20 rounded-full animate-pulse"></div>
+    <div class="absolute top-1/2 right-20 w-12 h-12 bg-green-400 opacity-15 rounded-full animate-bounce delay-75"></div>
+</section>
+
+<section class="py-12 bg-white">
+    <div class="container mx-auto px-4 max-w-2xl">
+        <div class="bg-white rounded-2xl shadow-2xl p-10">
+            {% if offered_skill %}
+                <!-- Skill and Teacher Info -->
+                <div class="bg-gray-50 rounded-lg p-6 mb-8">
+                    <h3 class="text-xl font-semibold mb-3">Skill Request Details</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <span class="text-gray-600 text-sm">Skill:</span>
+                            <p class="font-semibold text-gray-800">{{ offered_skill.skill.name }}</p>
+                        </div>
+                        <div>
+                            <span class="text-gray-600 text-sm">Category:</span>
+                            <p class="font-semibold text-gray-800">{{ offered_skill.skill.category.name }}</p>
+                        </div>
+                        <div>
+                            <span class="text-gray-600 text-sm">Teacher:</span>
+                            <p class="font-semibold text-gray-800">{{ recipient.get_full_name|default:recipient.username }}</p>
+                        </div>
+                        <div>
+                            <span class="text-gray-600 text-sm">Experience Level:</span>
+                            <p class="font-semibold text-gray-800">{{ offered_skill.get_proficiency_level_display }}</p>
+                        </div>
+                    </div>
+                    {% if offered_skill.description %}
+                        <div class="mt-4">
+                            <span class="text-gray-600 text-sm">About this skill:</span>
+                            <p class="text-gray-700 mt-1">{{ offered_skill.description }}</p>
+                        </div>
+                    {% endif %}
+                </div>
+            {% endif %}
+
+            <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">Request Details</h2>
+            <form method="post" class="space-y-6">
+                {% csrf_token %}
+                {% if form.non_field_errors %}
+                    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+                        {{ form.non_field_errors }}
+                    </div>
+                {% endif %}
+
+                <div>
+                    <label for="id_message" class="block text-gray-700 font-semibold mb-1">Message</label>
+                    {{ form.message }}
+                    <p class="text-xs text-gray-500 mt-1">Introduce yourself and explain why you'd like to learn this skill.</p>
+                    {% if form.message.errors %}<div class="text-red-600 text-sm mt-1">{{ form.message.errors.0 }}</div>{% endif %}
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="id_proposed_duration" class="block text-gray-700 font-semibold mb-1">Proposed Duration</label>
+                        {{ form.proposed_duration }}
+                        {% if form.proposed_duration.errors %}<div class="text-red-600 text-sm mt-1">{{ form.proposed_duration.errors.0 }}</div>{% endif %}
+                    </div>
+
+                    <div>
+                        <label for="id_proposed_format" class="block text-gray-700 font-semibold mb-1">Preferred Format</label>
+                        {{ form.proposed_format }}
+                        {% if form.proposed_format.errors %}<div class="text-red-600 text-sm mt-1">{{ form.proposed_format.errors.0 }}</div>{% endif %}
+                    </div>
+                </div>
+
+                <div id="location-field">
+                    <label for="id_proposed_location" class="block text-gray-700 font-semibold mb-1">Proposed Location</label>
+                    {{ form.proposed_location }}
+                    <p class="text-xs text-gray-500 mt-1">Suggest a meeting place (e.g., Library, Coffee Shop, Online).</p>
+                    {% if form.proposed_location.errors %}<div class="text-red-600 text-sm mt-1">{{ form.proposed_location.errors.0 }}</div>{% endif %}
+                </div>
+
+                <div class="flex gap-4">
+                    <button type="submit" class="btn btn-primary-custom flex-1 py-3 text-lg font-semibold rounded-lg shadow-md hover:scale-105 transition-transform">
+                        Send Request
+                    </button>
+                    <a href="{% url 'skills:skill_list' %}" class="btn btn-secondary flex-1 py-3 text-lg font-semibold rounded-lg text-center shadow-md hover:scale-105 transition-transform">
+                        Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</section>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const formatField = document.getElementById('id_proposed_format');
+    const locationField = document.getElementById('id_proposed_location');
+    const locationDiv = document.getElementById('location-field');
+    
+    function toggleLocationField() {
+        const selectedFormat = formatField.value;
+        
+        if (selectedFormat === 'online') {
+            // For online sessions, disable location field and hide it
+            locationField.disabled = true;
+            locationField.value = '';
+            locationDiv.style.opacity = '0.5';
+            locationField.placeholder = 'Not required for online sessions';
+        } else if (selectedFormat === 'in_person') {
+            // For in-person sessions, enable location field
+            locationField.disabled = false;
+            locationDiv.style.opacity = '1';
+            locationField.placeholder = 'e.g., Library, Coffee Shop, Campus Building';
+        } else {
+            // For flexible sessions, enable location field but make it optional
+            locationField.disabled = false;
+            locationDiv.style.opacity = '1';
+            locationField.placeholder = 'e.g., Library, Coffee Shop, Online';
+        }
+    }
+    
+    // Initialize the field state
+    toggleLocationField();
+    
+    // Add event listener for format changes
+    formatField.addEventListener('change', toggleLocationField);
+});
+</script>
+
+{% endblock %}

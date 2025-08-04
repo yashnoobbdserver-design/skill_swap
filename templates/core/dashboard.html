@@ -1,0 +1,194 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dashboard | Campus Skill-Swap{% endblock %}
+
+{% block content %}
+<section class="gradient-bg relative overflow-hidden">
+    <div class="absolute inset-0 bg-black opacity-20"></div>
+    <div class="relative container mx-auto px-4 py-16 lg:py-24">
+        <div class="text-white text-center">
+            <h1 class="text-4xl lg:text-5xl font-bold mb-4">Welcome back, {{ user.get_full_name|default:user.username }}!</h1>
+            <p class="text-lg lg:text-xl mb-6">Here's what is happening today on your skill-swap journey.</p>
+        </div>
+    </div>
+    <!-- Floating elements for visual appeal -->
+    <div class="absolute top-20 left-10 w-20 h-20 bg-white opacity-10 rounded-full animate-bounce"></div>
+    <div class="absolute bottom-20 right-10 w-16 h-16 bg-yellow-300 opacity-20 rounded-full animate-pulse"></div>
+    <div class="absolute top-1/2 right-20 w-12 h-12 bg-green-400 opacity-15 rounded-full animate-bounce delay-75"></div>
+</section>
+
+<section class="py-12 bg-white">
+    <div class="container mx-auto px-4">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Main Dashboard Left -->
+            <div class="lg:col-span-2 space-y-8">
+                <!-- Quick Stats -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="bg-green-50 p-6 rounded-xl text-center">
+                        <div class="text-3xl font-bold text-green-600 mb-2" id="skills-completed-count">{{ stats.skills_completed|default:"0" }}</div>
+                        <div class="text-gray-700">Skills Completed</div>
+                    </div>
+                    <div class="bg-purple-50 p-6 rounded-xl text-center">
+                        <div class="text-3xl font-bold text-purple-600 mb-2" id="sessions-month-count">{{ stats.sessions_this_month|default:"0" }}</div>
+                        <div class="text-gray-700">Sessions This Month</div>
+                    </div>
+                    <div class="bg-yellow-50 p-6 rounded-xl text-center">
+                        <div class="text-3xl font-bold text-yellow-600 mb-2" id="active-requests-count">{{ stats.active_requests|default:"0" }}</div>
+                        <div class="text-gray-700">Active Requests</div>
+                    </div>
+                </div>
+
+                <!-- Recent Requests -->
+                <div class="bg-white rounded-xl shadow p-6">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4">Recent Requests</h2>
+                    {% if recent_requests %}
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full text-sm">
+                                <thead>
+                                    <tr class="bg-gray-100">
+                                        <th class="py-2 px-4 text-left">Skill</th>
+                                        <th class="py-2 px-4 text-left">Type</th>
+                                        <th class="py-2 px-4 text-left">Date</th>
+                                        <th class="py-2 px-4 text-left">Status</th>
+                                        <th class="py-2 px-4 text-left">Details</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for req in recent_requests %}
+                                    <tr class="border-b">
+                                        <td class="py-2 px-4">{{ req.skill_name }}</td>
+                                        <td class="py-2 px-4">{{ req.request_type }}</td>
+                                        <td class="py-2 px-4">{{ req.date|date:"M d, Y" }}</td>
+                                        <td class="py-2 px-4">
+                                            <span class="px-2 py-1 rounded-full text-xs font-semibold
+                                                {% if req.status == 'Pending' %}bg-yellow-100 text-yellow-800
+                                                {% elif req.status == 'Accepted' %}bg-green-100 text-green-800
+                                                {% elif req.status == 'Declined' %}bg-red-100 text-red-800
+                                                {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                                {{ req.status }}
+                                            </span>
+                                        </td>
+                                        <td class="py-2 px-4">
+                                            <a href="{{ req.detail_url }}" class="text-blue-600 hover:underline">View</a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-gray-500">No recent requests.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Dashboard Right: Progress & Motivation -->
+            <div class="space-y-8">
+                <!-- Learning Progress -->
+                <div class="bg-white rounded-xl shadow p-6">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4">Your Learning Progress</h2>
+                    <div class="mb-4">
+                        <img src="{% static 'img/progress_chart.png' %}" alt="Learning Progress Chart" class="w-full rounded-lg shadow">
+                        <!-- Replace with your chart or use a chart.js/canvas if dynamic -->
+                    </div>
+                    <ul class="space-y-2">
+                        <li>
+                            <span class="font-semibold text-blue-600">{{ progress.completed_courses|default:'0' }}</span>
+                            <span class="text-gray-700">Courses Completed</span>
+                        </li>
+                        <li>
+                            <span class="font-semibold text-green-600">{{ progress.active_courses|default:'0' }}</span>
+                            <span class="text-gray-700">Active Courses</span>
+                        </li>
+                        <li>
+                            <span class="font-semibold text-yellow-600">{{ progress.total_hours|default:'0' }}</span>
+                            <span class="text-gray-700">Hours Learned</span>
+                        </li>
+                    </ul>
+                </div>
+                <!-- Motivation Message -->
+                <div class="bg-gradient-to-br from-blue-500 to-green-400 text-white rounded-xl shadow p-6 text-center">
+                    <h3 class="text-2xl font-bold mb-2">Great job!</h3>
+                    <p class="text-lg mb-2">
+                        You’ve completed <span class="font-bold">{{ progress.completed_courses|default:'0' }}</span> courses!
+                    </p>
+                    <p class="text-md">Keep up the momentum and continue learning new skills. Every session brings you closer to your goals!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Function to update dashboard stats
+    function updateDashboardStats() {
+        fetch('{% url "skills:get_user_stats" %}')
+            .then(response => response.json())
+            .then(data => {
+                // Update the skills completed count
+                const skillsCompletedElement = document.getElementById('skills-completed-count');
+                if (skillsCompletedElement) {
+                    skillsCompletedElement.textContent = data.skills_completed;
+                }
+                
+                // Update sessions this month
+                const sessionsElement = document.getElementById('sessions-month-count');
+                if (sessionsElement) {
+                    sessionsElement.textContent = data.sessions_this_month;
+                }
+                
+                // Update active requests
+                const requestsElement = document.getElementById('active-requests-count');
+                if (requestsElement) {
+                    requestsElement.textContent = data.active_requests;
+                }
+            })
+            .catch(error => {
+                console.error('Error updating dashboard stats:', error);
+            });
+    }
+
+    // Listen for custom events from other pages that might update skills
+    window.addEventListener('skillsUpdated', function() {
+        updateDashboardStats();
+    });
+
+    // Auto-refresh stats every 30 seconds if user is active
+    let lastActivity = Date.now();
+    let isActive = true;
+
+    // Track user activity
+    ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'].forEach(function(name) {
+        document.addEventListener(name, function() {
+            lastActivity = Date.now();
+            isActive = true;
+        }, true);
+    });
+
+    // Auto-refresh function
+    setInterval(function() {
+        // Only refresh if user has been active in the last 5 minutes
+        if (Date.now() - lastActivity < 5 * 60 * 1000) {
+            updateDashboardStats();
+        }
+    }, 30000); // Every 30 seconds
+
+    // Animate stats on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        const statNumbers = document.querySelectorAll('.text-3xl.font-bold');
+        statNumbers.forEach(function(element, index) {
+            element.style.opacity = '0';
+            element.style.transform = 'translateY(20px)';
+            
+            setTimeout(function() {
+                element.style.transition = 'all 0.6s ease-out';
+                element.style.opacity = '1';
+                element.style.transform = 'translateY(0)';
+            }, index * 200);
+        });
+    });
+</script>
+{% endblock %}

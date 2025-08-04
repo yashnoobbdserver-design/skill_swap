@@ -1,0 +1,582 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load session_tags %}
+
+{% block title %}My Sessions{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Header Section -->
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-800 mb-2">
+                        <i class="fas fa-calendar-alt mr-3 text-blue-600"></i>My Sessions
+                    </h1>
+                    <p class="text-gray-600">Manage and track all your learning sessions</p>
+                </div>
+                
+                <!-- Quick Stats Dashboard -->
+                <div class="mt-6 lg:mt-0 grid grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="bg-blue-50 p-4 rounded-lg text-center">
+                        <div class="text-2xl font-bold text-blue-600">{{ total_sessions }}</div>
+                        <div class="text-sm text-blue-700">Total Sessions</div>
+                    </div>
+                    <div class="bg-green-50 p-4 rounded-lg text-center">
+                        <div class="text-2xl font-bold text-green-600">{{ upcoming_sessions_count }}</div>
+                        <div class="text-sm text-green-700">Upcoming</div>
+                    </div>
+                    <div class="bg-yellow-50 p-4 rounded-lg text-center">
+                        <div class="text-2xl font-bold text-yellow-600">{{ pending_requests_count }}</div>
+                        <div class="text-sm text-yellow-700">Pending Requests</div>
+                    </div>
+                    <div class="bg-purple-50 p-4 rounded-lg text-center">
+                        <div class="text-2xl font-bold text-purple-600">{{ completed_sessions_count }}</div>
+                        <div class="text-sm text-purple-700">Completed</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions Bar -->
+        <div class="bg-white rounded-xl shadow-lg p-4 mb-8">
+            <div class="flex flex-wrap gap-4 items-center justify-between">
+                <div class="flex flex-wrap gap-3">
+                    <a href="{% url 'skills:skill_list' %}" 
+                       class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-200">
+                        <i class="fas fa-search mr-2"></i>Find Skills to Learn
+                    </a>
+                    <a href="{% url 'skill_sessions:request_management' %}" 
+                       class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition duration-200">
+                        <i class="fas fa-handshake mr-2"></i>Manage Requests
+                        {% if pending_requests_count > 0 %}
+                            <span class="ml-2 bg-red-500 text-white text-xs px-2 py-1 rounded-full">{{ pending_requests_count }}</span>
+                        {% endif %}
+                    </a>
+                    <a href="{% url 'skills:add_skill' %}" 
+                       class="inline-flex items-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition duration-200">
+                        <i class="fas fa-plus mr-2"></i>Add My Skills
+                    </a>
+                </div>
+                
+                <!-- Filter and Search -->
+                <div class="flex gap-3">
+                    <select id="sessionFilter" class="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="all">All Sessions</option>
+                        <option value="upcoming">Upcoming</option>
+                        <option value="completed">Completed</option>
+                        <option value="teaching">Teaching</option>
+                        <option value="learning">Learning</option>
+                    </select>
+                    <div class="relative">
+                        <input type="text" id="searchSessions" placeholder="Search sessions..." 
+                               class="border border-gray-300 rounded-lg pl-10 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Upcoming Sessions Section -->
+        {% if upcoming_sessions %}
+            <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800">
+                        <i class="fas fa-clock mr-2 text-green-600"></i>Upcoming Sessions
+                    </h2>
+                    <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
+                        {{ upcoming_sessions|length }} session{{ upcoming_sessions|length|pluralize }}
+                    </span>
+                </div>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {% for session in upcoming_sessions %}
+                        <div class="session-card border border-green-200 rounded-xl p-6 bg-gradient-to-r from-green-50 to-blue-50 hover:shadow-lg transition-shadow duration-300">
+                            <div class="flex items-start justify-between mb-4">
+                                <div class="flex-1">
+                                    <h3 class="text-lg font-semibold text-gray-800 mb-2">{{ session.skill.name }}</h3>
+                                    <div class="flex items-center text-sm text-gray-600 mb-2">
+                                        {% if session.teacher == user %}
+                                            <i class="fas fa-chalkboard-teacher text-green-600 mr-2"></i>
+                                            <span>Teaching to {{ session.learner.get_full_name }}</span>
+                                        {% else %}
+                                            <i class="fas fa-book-reader text-blue-600 mr-2"></i>
+                                            <span>Learning from {{ session.teacher.get_full_name }}</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <span class="status-badge status-{{ session.status }} px-2 py-1 rounded-full text-xs font-medium">
+                                    {{ session.get_status_display }}
+                                </span>
+                            </div>
+                            
+                            <!-- Session Details -->
+                            <div class="grid grid-cols-2 gap-4 mb-4 text-sm">
+                                <div class="flex items-center">
+                                    <span>{{ session.scheduled_date|date:"M d, Y" }}</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <i class="fas fa-clock text-orange-500 mr-2"></i>
+                                    <span>{{ session.scheduled_date|time:"g:i A" }}</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <i class="fas fa-hourglass-half text-blue-500 mr-2"></i>
+                                    <span>{{ session.duration_minutes }} minutes</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <i class="fas fa-{{ session.format|session_format_icon }} text-red-500 mr-2"></i>
+                                    <span>{{ session.get_format_display }}</span>
+                                </div>
+                            </div>
+                            
+                            <!-- Location/Meeting Link -->
+                            {% if session.location or session.meeting_link %}
+                                <div class="mb-4 p-3 bg-white rounded-lg border">
+                                    {% if session.format == 'online' and session.meeting_link %}
+                                        <div class="flex items-center">
+                                            <i class="fas fa-video text-blue-500 mr-2"></i>
+                                            <a href="{{ session.meeting_link }}" target="_blank" 
+                                               class="text-blue-600 hover:text-blue-800 font-medium">
+                                                Join Online Session
+                                            </a>
+                                        </div>
+                                    {% elif session.location %}
+                                        <div class="flex items-center">
+                                            <i class="fas fa-map-marker-alt text-red-500 mr-2"></i>
+                                            <span class="text-gray-700">{{ session.location }}</span>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+                            
+                            <!-- Action Buttons -->
+                            <div class="flex gap-2">
+                                {% if session.can_start %}
+                                    <button class="flex-1 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition duration-200 font-semibold"
+                                            onclick="startSession({{ session.id }})">
+                                        <i class="fas fa-play mr-2"></i>Start Now
+                                    </button>
+                                {% else %}
+                                    <div class="flex-1 bg-gray-100 text-gray-600 px-4 py-2 rounded-lg text-center font-semibold">
+                                        <i class="fas fa-clock mr-2"></i>
+                                        {% if session.scheduled_date > now %}
+                                            Starts in {{ session.scheduled_date|timeuntil }}
+                                        {% else %}
+                                            Session time passed
+                                        {% endif %}
+                                    </div>
+                                {% endif %}
+                                
+                                <a href="{% url 'skill_sessions:session_detail' session.id %}" 
+                                   class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition duration-200 font-semibold">
+                                    <i class="fas fa-info-circle mr-1"></i>Details
+                                </a>
+                                
+                                {% if session.teacher == user or session.learner == user %}
+                                    <button class="bg-yellow-600 text-white px-4 py-2 rounded-lg hover:bg-yellow-700 transition duration-200"
+                                            onclick="rescheduleSession({{ session.id }})" title="Reschedule">
+                                        <i class="fas fa-calendar-alt"></i>
+                                    </button>
+                                    <button class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition duration-200"
+                                            onclick="cancelSession({{ session.id }})" title="Cancel Session">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- Recent Activity Section -->
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl font-bold text-gray-800">
+                    <i class="fas fa-history mr-2 text-purple-600"></i>Recent Activity
+                </h2>
+                <a href="{% url 'skill_sessions:session_history' %}" class="text-blue-600 hover:text-blue-800 font-medium">
+                    View All History
+                </a>
+            </div>
+            
+            {% if recent_activities %}
+                <div class="space-y-4">
+                    {% for activity in recent_activities %}
+                        <div class="flex items-start space-x-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition duration-200">
+                            <div class="flex-shrink-0">
+                                <div class="w-10 h-10 rounded-full flex items-center justify-center
+                                           {% if activity.type == 'session_completed' %}bg-green-100 text-green-600
+                                           {% elif activity.type == 'session_scheduled' %}bg-blue-100 text-blue-600
+                                           {% elif activity.type == 'request_received' %}bg-yellow-100 text-yellow-600
+                                           {% elif activity.type == 'review_received' %}bg-purple-100 text-purple-600
+                                           {% else %}bg-gray-100 text-gray-600{% endif %}">
+                                    {% if activity.type == 'session_completed' %}
+                                        <i class="fas fa-check"></i>
+                                    {% elif activity.type == 'session_scheduled' %}
+                                        <i class="fas fa-calendar-plus"></i>
+                                    {% elif activity.type == 'request_received' %}
+                                        <i class="fas fa-envelope"></i>
+                                    {% elif activity.type == 'review_received' %}
+                                        <i class="fas fa-star"></i>
+                                    {% else %}
+                                        <i class="fas fa-bell"></i>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-gray-800 font-medium">{{ activity.title }}</p>
+                                <p class="text-gray-600 text-sm mt-1">{{ activity.description }}</p>
+                                <p class="text-gray-500 text-xs mt-2">{{ activity.created_at|timesince }} ago</p>
+                            </div>
+                            {% if activity.action_url %}
+                                <div>
+                                    <a href="{{ activity.action_url }}" 
+                                       class="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                                        {{ activity.action_text|default:"View" }}
+                                    </a>
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-8">
+                    <i class="fas fa-history text-gray-300 text-4xl mb-4"></i>
+                    <p class="text-gray-500">No recent activity to show.</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- All Sessions Section -->
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl font-bold text-gray-800">
+                    <i class="fas fa-list mr-2 text-gray-600"></i>All Sessions
+                </h2>
+                <div class="flex items-center space-x-4">
+                    <span class="text-sm text-gray-500">{{ all_sessions|length }} total session{{ all_sessions|length|pluralize }}</span>
+                    <button id="toggleView" class="text-blue-600 hover:text-blue-800 font-medium">
+                        <i class="fas fa-th-large mr-1"></i>Grid View
+                    </button>
+                </div>
+            </div>
+            
+            <div id="sessionsContainer" class="sessions-list">
+                {% if all_sessions %}
+                    {% for session in all_sessions %}
+                        <div class="session-item border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow duration-200" 
+                             data-session-status="{{ session.status }}" 
+                             data-session-role="{% if session.teacher == user %}teaching{% else %}learning{% endif %}"
+                             data-session-skill="{{ session.skill.name|lower }}">
+                            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+                                <div class="flex-1">
+                                    <div class="flex items-start space-x-4">
+                                        <!-- User Avatar -->
+                                        <div class="flex-shrink-0">
+                                            {% if session.teacher == user %}
+                                                {% if session.learner.profile.profile_picture %}
+                                                    <img src="{{ session.learner.profile.profile_picture.url }}" 
+                                                         alt="{{ session.learner.get_full_name }}" 
+                                                         class="w-12 h-12 rounded-full object-cover">
+                                                {% else %}
+                                                    <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
+                                                        <i class="fas fa-user text-blue-600"></i>
+                                                    </div>
+                                                {% endif %}
+                                            {% else %}
+                                                {% if session.teacher.profile.profile_picture %}
+                                                    <img src="{{ session.teacher.profile.profile_picture.url }}" 
+                                                         alt="{{ session.teacher.get_full_name }}" 
+                                                         class="w-12 h-12 rounded-full object-cover">
+                                                {% else %}
+                                                    <div class="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center">
+                                                        <i class="fas fa-user text-green-600"></i>
+                                                    </div>
+                                                {% endif %}
+                                            {% endif %}
+                                        </div>
+                                        
+                                        <!-- Session Info -->
+                                        <div class="flex-1">
+                                            <div class="flex items-center mb-2">
+                                                <h3 class="text-lg font-semibold text-gray-800 mr-3">{{ session.skill.name }}</h3>
+                                                <span class="status-badge status-{{ session.status }} px-2 py-1 rounded-full text-xs font-medium">
+                                                    {{ session.get_status_display }}
+                                                </span>
+                                            </div>
+                                            
+                                            <div class="flex items-center text-sm text-gray-600 mb-2">
+                                                {% if session.teacher == user %}
+                                                    <i class="fas fa-chalkboard-teacher text-green-600 mr-2"></i>
+                                                    <span>Teaching to {{ session.learner.get_full_name }}</span>
+                                                {% else %}
+                                                    <i class="fas fa-book-reader text-blue-600 mr-2"></i>
+                                                    <span>Learning from {{ session.teacher.get_full_name }}</span>
+                                                {% endif %}
+                                            </div>
+                                            
+                                            <!-- Session Details Grid -->
+                                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-600">
+                                                <div class="flex items-center">
+                                                    <span>{{ session.scheduled_date|date:"M d, Y" }}</span>
+                                                </div>
+                                                <div class="flex items-center">
+                                                    <i class="fas fa-clock text-green-500 mr-1"></i>
+                                                    <span>{{ session.scheduled_date|time:"g:i A" }}</span>
+                                                </div>
+                                                <div class="flex items-center">
+                                                    <i class="fas fa-hourglass-half text-orange-500 mr-1"></i>
+                                                    <span>{{ session.duration_minutes }}min</span>
+                                                </div>
+                                                <div class="flex items-center">
+                                                    <i class="fas fa-{{ session.format|session_format_icon }} text-purple-500 mr-1"></i>
+                                                    <span>{{ session.get_format_display }}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Action Buttons -->
+                                <div class="mt-4 lg:mt-0 lg:ml-6 flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+                                    {% if session.status == 'scheduled' and session.can_start %}
+                                        <button class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition duration-200 font-semibold"
+                                                onclick="startSession({{ session.id }})">
+                                            <i class="fas fa-play mr-1"></i>Start
+                                        </button>
+                                    {% elif session.status == 'completed' %}
+                                        {% load session_tags %}
+                                        {% if not session|has_user_reviewed:user %}
+                                            <a href="{% url 'skill_sessions:leave_review' session.id %}" 
+                                               class="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition duration-200 font-semibold text-center">
+                                                <i class="fas fa-star mr-1"></i>Review
+                                            </a>
+                                        {% else %}
+                                            <span class="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg text-center font-semibold">
+                                                <i class="fas fa-check mr-1"></i>Reviewed
+                                            </span>
+                                        {% endif %}
+                                    {% endif %}
+                                    
+                                    <a href="{% url 'skill_sessions:session_detail' session.id %}" 
+                                       class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-200 font-semibold text-center">
+                                        <i class="fas fa-eye mr-1"></i>View
+                                    </a>
+                                    
+                                    {% if session.teacher == user %}
+                                        <a href="{% url 'accounts:profile_details' session.learner.id %}" 
+                                           class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition duration-200 font-semibold text-center">
+                                            <i class="fas fa-user mr-1"></i>Profile
+                                        </a>
+                                    {% else %}
+                                        <a href="{% url 'accounts:profile_details' session.teacher.id %}" 
+                                           class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition duration-200 font-semibold text-center">
+                                            <i class="fas fa-user mr-1"></i>Profile
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-12">
+                        <i class="fas fa-calendar-alt text-gray-300 text-6xl mb-4"></i>
+                        <h3 class="text-xl font-semibold text-gray-600 mb-2">No sessions yet</h3>
+                        <p class="text-gray-500 mb-6">Start by browsing skills or creating your first session request.</p>
+                        <div class="flex justify-center gap-4">
+                            <a href="{% url 'skills:skill_list' %}" 
+                               class="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-200">
+                                <i class="fas fa-search mr-2"></i>Browse Skills
+                            </a>
+                            <a href="{% url 'skills:add_skill' %}" 
+                               class="inline-flex items-center px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition duration-200">
+                                <i class="fas fa-plus mr-2"></i>Add Your Skills
+                            </a>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.status-badge.status-pending { background-color: #FEF3C7; color: #92400E; }
+.status-badge.status-accepted { background-color: #D1FAE5; color: #065F46; }
+.status-badge.status-declined { background-color: #FEE2E2; color: #991B1B; }
+.status-badge.status-cancelled { background-color: #F3F4F6; color: #6B7280; }
+.status-badge.status-expired { background-color: #F3F4F6; color: #6B7280; }
+.status-badge.status-scheduled { background-color: #DBEAFE; color: #1E40AF; }
+.status-badge.status-completed { background-color: #D1FAE5; color: #065F46; }
+.status-badge.status-in_progress { background-color: #FEF3C7; color: #92400E; }
+
+.sessions-list .session-item {
+    margin-bottom: 1.5rem;
+}
+
+.sessions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+    gap: 1.5rem;
+}
+
+.sessions-grid .session-item {
+    margin-bottom: 0;
+}
+
+.session-item[data-session-status="completed"] {
+    opacity: 0.85;
+}
+
+.session-item.hidden {
+    display: none;
+}
+</style>
+
+<script>
+// Session filtering
+document.getElementById('sessionFilter').addEventListener('change', function() {
+    filterSessions();
+});
+
+document.getElementById('searchSessions').addEventListener('input', function() {
+    filterSessions();
+});
+
+function filterSessions() {
+    const filter = document.getElementById('sessionFilter').value;
+    const search = document.getElementById('searchSessions').value.toLowerCase();
+    const sessions = document.querySelectorAll('.session-item');
+    
+    sessions.forEach(session => {
+        let show = true;
+        
+        // Filter by status/type
+        if (filter !== 'all') {
+            const status = session.dataset.sessionStatus;
+            const role = session.dataset.sessionRole;
+            
+            if (filter === 'upcoming' && status !== 'scheduled') show = false;
+            if (filter === 'completed' && status !== 'completed') show = false;
+            if (filter === 'teaching' && role !== 'teaching') show = false;
+            if (filter === 'learning' && role !== 'learning') show = false;
+        }
+        
+        // Filter by search
+        if (search && show) {
+            const skillName = session.dataset.sessionSkill;
+            const sessionText = session.textContent.toLowerCase();
+            if (!skillName.includes(search) && !sessionText.includes(search)) {
+                show = false;
+            }
+        }
+        
+        session.classList.toggle('hidden', !show);
+    });
+}
+
+// Toggle view
+document.getElementById('toggleView').addEventListener('click', function() {
+    const container = document.getElementById('sessionsContainer');
+    const button = this;
+    
+    if (container.classList.contains('sessions-list')) {
+        container.classList.remove('sessions-list');
+        container.classList.add('sessions-grid');
+        button.innerHTML = '<i class="fas fa-list mr-1"></i>List View';
+    } else {
+        container.classList.remove('sessions-grid');
+        container.classList.add('sessions-list');
+        button.innerHTML = '<i class="fas fa-th-large mr-1"></i>Grid View';
+    }
+});
+
+// Session actions
+function startSession(sessionId) {
+    fetch(`/sessions/sessions/${sessionId}/start/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            window.location.href = `/sessions/${sessionId}/`;
+        } else {
+            showNotification(data.error || 'Cannot start session yet', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('An error occurred while starting the session.', 'error');
+    });
+}
+
+function rescheduleSession(sessionId) {
+    // This would open a modal or redirect to reschedule page
+    window.location.href = `/sessions/${sessionId}/reschedule/`;
+}
+
+function cancelSession(sessionId) {
+    if (confirm('Are you sure you want to cancel this session?')) {
+        fetch(`/sessions/${sessionId}/cancel/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        })
+        .then(response => {
+            if (response.ok) {
+                location.reload();
+            } else {
+                showNotification('Error cancelling session', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('An error occurred while cancelling the session.', 'error');
+        });
+    }
+}
+
+function showNotification(message, type) {
+    const notification = document.createElement('div');
+    notification.className = `fixed top-4 right-4 px-6 py-3 rounded-lg shadow-lg z-50 ${
+        type === 'success' ? 'bg-green-600 text-white' : 'bg-red-600 text-white'
+    }`;
+    notification.textContent = message;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.remove();
+    }, 3000);
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// Auto-refresh upcoming sessions every 5 minutes
+setInterval(() => {
+    // Only refresh if page is visible
+    if (!document.hidden) {
+        location.reload();
+    }
+}, 300000); // 5 minutes
+</script>
+{% endblock %}
