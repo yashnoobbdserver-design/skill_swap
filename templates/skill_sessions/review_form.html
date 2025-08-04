@@ -161,7 +161,16 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Handle star rating interactions
-    const ratingGroups = document.querySelectorAll('div:has(input[type="radio"][name$="_rating"])');
+    const ratingInputs = document.querySelectorAll('input[type="radio"][name$="_rating"]');
+    const ratingGroups = [];
+    
+    // Find parent divs containing rating inputs
+    ratingInputs.forEach(input => {
+        const group = input.closest('div');
+        if (group && !ratingGroups.includes(group)) {
+            ratingGroups.push(group);
+        }
+    });
     
     ratingGroups.forEach(group => {
         const stars = group.querySelectorAll('.rating-star');

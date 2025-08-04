@@ -185,18 +185,24 @@ class NotificationListView:
         @login_required
         def notification_view(request):
             from accounts.models import Notification
+            from django.core.paginator import Paginator
             
             # Get all notifications for the current user
             notifications = Notification.objects.filter(
                 recipient=request.user
             ).order_by('-created_at')
             
+            # Pagination - limit to 10 notifications per page
+            paginator = Paginator(notifications, 10)
+            page_number = request.GET.get('page')
+            notifications_page = paginator.get_page(page_number)
+            
             # Mark all unread notifications as read when viewing the page
             unread_notifications = notifications.filter(is_read=False)
             unread_notifications.update(is_read=True)
             
             context = {
-                'notifications': notifications,
+                'notifications': notifications_page,
                 'unread_count': 0,  # Now 0 since we marked them as read
             }
             

@@ -55,6 +55,28 @@ class CreateRequestView(LoginRequiredMixin, CreateView):
     template_name = 'skill_sessions/create_request.html'
     success_url = reverse_lazy('skill_sessions:request_list')
     
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['requester'] = self.request.user
+        
+        # Get recipient from URL parameter if provided
+        user_id = self.kwargs.get('user_id')
+        if user_id:
+            try:
+                from django.contrib.auth.models import User
+                recipient = User.objects.get(id=user_id)
+                kwargs['recipient'] = recipient
+            except User.DoesNotExist:
+                pass
+        
+        # Determine if we need to show skill selection
+        offered_skill_id = self.request.GET.get('offered_skill')
+        if not offered_skill_id and user_id:
+            # No specific skill provided, show skill selection
+            kwargs['show_skill_selection'] = True
+        
+        return kwargs
+    
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         # Get recipient from URL parameter if provided
@@ -95,7 +117,7 @@ class CreateRequestView(LoginRequiredMixin, CreateView):
                 return self.form_invalid(form)
         
         # Get offered skill from URL parameter or form data
-        offered_skill_id = self.request.GET.get('offered_skill') or self.request.POST.get('offered_skill')
+        offered_skill_id = self.request.GET.get('offered_skill')
         if offered_skill_id:
             try:
                 from skills.models import OfferedSkill
@@ -106,6 +128,9 @@ class CreateRequestView(LoginRequiredMixin, CreateView):
             except OfferedSkill.DoesNotExist:
                 form.add_error(None, "The selected skill is no longer available.")
                 return self.form_invalid(form)
+        elif form.cleaned_data.get('offered_skill'):
+            # Get offered skill from form selection
+            form.instance.offered_skill = form.cleaned_data['offered_skill']
         
         # Ensure both recipient and offered_skill are set
         if not hasattr(form.instance, 'recipient') or not form.instance.recipient:
@@ -463,6 +488,18 @@ def start_session_simple(request, pk):
     session.status = 'in_progress'
     session.started_at = timezone.now()
     session.save()
+    
+    # Create notification for the learner
+    from accounts.models import Notification
+    Notification.objects.create(
+        recipient=session.learner,
+        notification_type='session_started',
+        title='Session Started',
+        message=f'Your session for {session.skill.name} with {session.teacher.get_full_name() or session.teacher.username} has started.',
+        related_user=session.teacher,
+        related_object_id=session.id
+    )
+    
     return redirect('skill_sessions:session_detail', pk=pk)
 
 
@@ -479,6 +516,17 @@ def end_session(request, pk):
     session.status = 'completed'
     session.ended_at = timezone.now()
     session.save()
+    
+    # Create notification for the learner
+    from accounts.models import Notification
+    Notification.objects.create(
+        recipient=session.learner,
+        notification_type='session_ended',
+        title='Session Ended',
+        message=f'Your session for {session.skill.name} with {session.teacher.get_full_name() or session.teacher.username} has ended.',
+        related_user=session.teacher,
+        related_object_id=session.id
+    )
     
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         return JsonResponse({'success': True, 'message': 'Session ended successfully'})
@@ -1027,6 +1075,17 @@ def start_session(request, session_id):
             session.status = 'in_progress'
             session.started_at = timezone.now()
             session.save()
+            
+            # Create notification for the learner
+            from accounts.models import Notification
+            Notification.objects.create(
+                recipient=session.learner,
+                notification_type='session_started',
+                title='Session Started',
+                message=f'Your session for {session.skill.name} with {session.teacher.get_full_name() or session.teacher.username} has started.',
+                related_user=session.teacher,
+                related_object_id=session.id
+            )
             
             return JsonResponse({
                 'success': True, 

@@ -216,7 +216,7 @@
                                         <a href="{% url 'skill_sessions:session_detail' session.pk %}" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-medium transition-colors">
                                             <i class="fas fa-eye mr-2"></i>View
                                         </a>
-                                        {% if session.can_start %}
+                                        {% if session.can_start and session.teacher == user %}
                                             <form method="post" action="{% url 'skill_sessions:session_start' session.pk %}" class="inline">
                                                 {% csrf_token %}
                                                 <button type="submit" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-medium transition-colors">

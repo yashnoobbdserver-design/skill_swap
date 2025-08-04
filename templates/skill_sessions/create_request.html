@@ -66,6 +66,17 @@
                     </div>
                 {% endif %}
 
+                <!-- Skill Selection (only shown when no specific skill is pre-selected) -->
+                {% if not offered_skill and form.offered_skill.field.widget.input_type != 'hidden' %}
+                <div>
+                    <label for="id_offered_skill" class="block text-gray-700 font-semibold mb-1">Select Skill to Learn <span class="text-red-500">*</span></label>
+                    {{ form.offered_skill }}
+                    {% if form.offered_skill.errors %}<div class="text-red-600 text-sm mt-1">{{ form.offered_skill.errors.0 }}</div>{% endif %}
+                </div>
+                {% else %}
+                    {{ form.offered_skill }}
+                {% endif %}
+
                 <div>
                     <label for="id_message" class="block text-gray-700 font-semibold mb-1">Message</label>
                     {{ form.message }}
@@ -73,18 +84,10 @@
                     {% if form.message.errors %}<div class="text-red-600 text-sm mt-1">{{ form.message.errors.0 }}</div>{% endif %}
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <label for="id_proposed_duration" class="block text-gray-700 font-semibold mb-1">Proposed Duration</label>
-                        {{ form.proposed_duration }}
-                        {% if form.proposed_duration.errors %}<div class="text-red-600 text-sm mt-1">{{ form.proposed_duration.errors.0 }}</div>{% endif %}
-                    </div>
-
-                    <div>
-                        <label for="id_proposed_format" class="block text-gray-700 font-semibold mb-1">Preferred Format</label>
-                        {{ form.proposed_format }}
-                        {% if form.proposed_format.errors %}<div class="text-red-600 text-sm mt-1">{{ form.proposed_format.errors.0 }}</div>{% endif %}
-                    </div>
+                <div>
+                    <label for="id_proposed_format" class="block text-gray-700 font-semibold mb-1">Preferred Format</label>
+                    {{ form.proposed_format }}
+                    {% if form.proposed_format.errors %}<div class="text-red-600 text-sm mt-1">{{ form.proposed_format.errors.0 }}</div>{% endif %}
                 </div>
 
                 <div id="location-field">

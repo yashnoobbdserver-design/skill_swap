@@ -288,7 +288,7 @@ def notifications_view(request):
     
     # Pagination
     from django.core.paginator import Paginator
-    paginator = Paginator(notifications, 20)  # Show 20 notifications per page
+    paginator = Paginator(notifications, 10)  # Show 10 notifications per page
     page_number = request.GET.get('page')
     notifications_page = paginator.get_page(page_number)
     
