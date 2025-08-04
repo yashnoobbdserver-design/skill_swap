@@ -5,10 +5,16 @@ from skills.models import OfferedSkill, DesiredSkill
 
 class SkillSwapRequestForm(forms.ModelForm):
     """Form for creating skill swap requests"""
+    offered_skill = forms.ModelChoiceField(
+        queryset=None,
+        required=False,
+        empty_label="Select a skill to learn",
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
     
     class Meta:
         model = SkillSwapRequest
-        fields = ['message', 'proposed_duration', 'proposed_format', 'proposed_location']
+        fields = ['offered_skill', 'message', 'proposed_format', 'proposed_location']
         widgets = {
             'message': forms.Textarea(attrs={
                 'rows': 4,
@@ -22,7 +28,20 @@ class SkillSwapRequestForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         self.requester = kwargs.pop('requester', None)
         self.recipient = kwargs.pop('recipient', None)
+        self.show_skill_selection = kwargs.pop('show_skill_selection', False)
         super().__init__(*args, **kwargs)
+        
+        # Set up offered_skill queryset if recipient is provided
+        if self.recipient and self.show_skill_selection:
+            from skills.models import OfferedSkill
+            self.fields['offered_skill'].queryset = OfferedSkill.objects.filter(
+                user=self.recipient, is_active=True
+            )
+            self.fields['offered_skill'].required = True
+        else:
+            # Hide the field if not needed
+            self.fields['offered_skill'].widget = forms.HiddenInput()
+            self.fields['offered_skill'].required = False
     
     def clean(self):
         cleaned_data = super().clean()

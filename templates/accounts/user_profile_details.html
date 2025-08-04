@@ -172,35 +172,7 @@
                     {% endif %}
                 </div>
                 
-                <!-- Skills Learning -->
-                <div class="bg-white rounded-xl shadow-lg p-6">
-                    <h2 class="text-2xl font-bold text-gray-800 mb-6">
-                        <i class="fas fa-book-reader mr-2 text-purple-600"></i>Skills I Want to Learn
-                    </h2>
-                    {% if desired_skills %}
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {% for skill in desired_skills %}
-                                <div class="skill-card p-4 rounded-lg border bg-gradient-to-r from-purple-50 to-pink-50">
-                                    <h3 class="font-semibold text-gray-800 mb-2">{{ skill.skill.name }}</h3>
-                                    <div class="flex items-center mb-2">
-                                        <span class="text-sm font-medium text-purple-600 bg-purple-100 px-2 py-1 rounded-full">
-                                            {{ skill.get_interest_level_display }}
-                                        </span>
-                                        <span class="ml-2 text-sm text-gray-500">
-                                            {{ skill.skill.category.name }}
-                                        </span>
-                                    </div>
-                                    {% if skill.learning_goals %}
-                                        <p class="text-sm text-gray-600">{{ skill.learning_goals|truncatewords:15 }}</p>
-                                    {% endif %}
-                                </div>
-                            {% endfor %}
-                        </div>
-                    {% else %}
-                        <p class="text-gray-500 text-center py-8">No learning interests specified yet.</p>
-                    {% endif %}
-                </div>
-                
+
                 <!-- Recent Reviews -->
                 <div class="bg-white rounded-xl shadow-lg p-6">
                     <h2 class="text-2xl font-bold text-gray-800 mb-6">

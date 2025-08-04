@@ -95,7 +95,7 @@
                                         </div>
                                     </div>
                                     <div class="flex space-x-2">
-                                        {% if session.can_start %}
+                                        {% if session.can_start and session.teacher == user %}
                                             <a href="{% url 'skill_sessions:session_start' session.id %}" class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors">
                                                 <i class="fas fa-play mr-1"></i>Start Session
                                             </a>
