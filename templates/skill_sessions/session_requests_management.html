@@ -152,7 +152,7 @@
                                         </div>
                                     {% elif request.status == 'accepted' %}
                                         <div class="mt-4 lg:mt-0 lg:ml-6">
-                                            {% if request.session %}
+                                            {% if request.session and request.session.status != 'cancelled' %}
                                                 <span class="px-6 py-2 bg-gray-400 text-white rounded-lg font-semibold cursor-not-allowed">
                                                     <i class="fas fa-check-circle mr-2"></i>Session Scheduled
                                                 </span>
@@ -364,15 +364,23 @@
                                     
                                     <div class="mt-4 lg:mt-0 lg:ml-6 flex flex-col space-y-2">
                                         {% if session.status == 'scheduled' %}
-                                            {% if session.can_start %}
-                                                <button class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition duration-200 font-semibold"
-                                                        onclick="startSession({{ session.id }})">
-                                                    <i class="fas fa-play mr-2"></i>Start Session
-                                                </button>
-                                            {% elif session.is_upcoming %}
-                                                <span class="px-6 py-2 bg-blue-100 text-blue-800 rounded-lg text-center font-semibold">
-                                                    <i class="fas fa-clock mr-2"></i>Upcoming
-                                                </span>
+                                            {% if session.teacher == user %}
+                                                {% if session.can_start %}
+                                                    <button class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition duration-200 font-semibold"
+                                                            onclick="startSession({{ session.id }})">
+                                                        <i class="fas fa-play mr-2"></i>Start Session
+                                                    </button>
+                                                {% elif session.is_upcoming %}
+                                                    <span class="px-6 py-2 bg-blue-100 text-blue-800 rounded-lg text-center font-semibold">
+                                                        <i class="fas fa-clock mr-2"></i>Upcoming
+                                                    </span>
+                                                {% endif %}
+                                            {% else %}
+                                                {% if session.is_upcoming %}
+                                                    <span class="px-6 py-2 bg-blue-100 text-blue-800 rounded-lg text-center font-semibold">
+                                                        <i class="fas fa-clock mr-2"></i>Upcoming
+                                                    </span>
+                                                {% endif %}
                                             {% endif %}
                                             
                                             <button class="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition duration-200 font-semibold"
@@ -446,7 +454,7 @@
                                             <i class="fas fa-eye mr-2"></i>View Details
                                         </a>
                                         {% load session_tags %}
-                                        {% if not session|has_user_reviewed:user %}
+                                        {% if session.learner == user and not session|has_user_reviewed:user %}
                                             <a href="{% url 'skill_sessions:leave_review' session.id %}" 
                                                class="px-6 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition duration-200 font-semibold text-center">
                                                 <i class="fas fa-star mr-2"></i>Leave Review
@@ -643,8 +651,14 @@ function cancelSession(sessionId) {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                location.reload();
                 showNotification(data.message, 'success');
+                // If the response indicates we should redirect to received requests tab
+                if (data.redirect_to_received) {
+                    // Switch to received requests tab
+                    switchTab('received');
+                } else {
+                    location.reload();
+                }
             } else {
                 showNotification(data.error || 'An error occurred', 'error');
             }
