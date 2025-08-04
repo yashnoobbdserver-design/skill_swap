@@ -221,13 +221,33 @@
             {% endif %}
         </div>
 
-        <!-- Load More Button -->
-        {% if has_more %}
-            <div class="text-center mt-8">
-                <button id="loadMore" class="inline-flex items-center px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition duration-200"
-                        data-page="{{ next_page }}">
-                    <i class="fas fa-chevron-down mr-2"></i>Load More Notifications
-                </button>
+        <!-- Pagination -->
+        {% if notifications.has_other_pages %}
+            <div class="flex justify-center mt-12">
+                <nav class="flex items-center space-x-2">
+                    {% if notifications.has_previous %}
+                        <a href="?page={{ notifications.previous_page_number }}{% if request.GET.filter %}&filter={{ request.GET.filter }}{% endif %}" 
+                           class="px-4 py-2 text-gray-500 hover:text-blue-600 transition-colors">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                    {% endif %}
+                    
+                    {% for num in notifications.paginator.page_range %}
+                        {% if notifications.number == num %}
+                            <span class="px-4 py-2 bg-blue-600 text-white rounded-lg">{{ num }}</span>
+                        {% elif num > notifications.number|add:'-3' and num < notifications.number|add:'3' %}
+                            <a href="?page={{ num }}{% if request.GET.filter %}&filter={{ request.GET.filter }}{% endif %}" 
+                               class="px-4 py-2 text-gray-600 hover:text-blue-600 transition-colors">{{ num }}</a>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if notifications.has_next %}
+                        <a href="?page={{ notifications.next_page_number }}{% if request.GET.filter %}&filter={{ request.GET.filter }}{% endif %}" 
+                           class="px-4 py-2 text-gray-500 hover:text-blue-600 transition-colors">
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    {% endif %}
+                </nav>
             </div>
         {% endif %}
     </div>
@@ -252,27 +272,27 @@
 </div>
 
 <script>
-// Notification filtering
+// Notification filtering with URL parameters
 document.getElementById('notificationFilter').addEventListener('change', function() {
-    filterNotifications();
+    const filter = this.value;
+    const url = new URL(window.location);
+    
+    if (filter === 'all') {
+        url.searchParams.delete('filter');
+    } else {
+        url.searchParams.set('filter', filter);
+    }
+    url.searchParams.delete('page'); // Reset to first page when filtering
+    
+    window.location.href = url.toString();
 });
 
-function filterNotifications() {
-    const filter = document.getElementById('notificationFilter').value;
-    const notifications = document.querySelectorAll('.notification-item');
-    
-    notifications.forEach(notification => {
-        let show = true;
-        
-        if (filter === 'unread') {
-            show = notification.dataset.isRead === 'false';
-        } else if (filter !== 'all') {
-            show = notification.dataset.notificationType === filter;
-        }
-        
-        notification.style.display = show ? 'block' : 'none';
-    });
-}
+// Set the filter dropdown to the current filter value
+document.addEventListener('DOMContentLoaded', function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const currentFilter = urlParams.get('filter') || 'all';
+    document.getElementById('notificationFilter').value = currentFilter;
+});
 
 // Mark individual notification as read
 document.querySelectorAll('.mark-read-btn').forEach(button => {
@@ -306,13 +326,7 @@ document.getElementById('deleteRead').addEventListener('click', function() {
     });
 });
 
-// Load more notifications
-{% if has_more %}
-document.getElementById('loadMore').addEventListener('click', function() {
-    const page = this.dataset.page;
-    loadMoreNotifications(page);
-});
-{% endif %}
+
 
 function markNotificationRead(notificationId) {
     fetch(`/accounts/notifications/${notificationId}/mark-read/`, {
@@ -399,19 +413,7 @@ function deleteReadNotifications() {
     });
 }
 
-function loadMoreNotifications(page) {
-    fetch(`/accounts/notifications/?page=${page}`, {
-        headers: {
-            'X-Requested-With': 'XMLHttpRequest'
-        }
-    })
-    .then(response => response.text())
-    .then(html => {
-        // This would append the new notifications to the existing list
-        // Implementation depends on how the backend returns paginated data
-        console.log('Load more functionality would be implemented here');
-    });
-}
+
 
 function updateNotificationCounts() {
     const unreadNotifications = document.querySelectorAll('[data-is-read="false"]');
