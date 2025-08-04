@@ -81,13 +81,13 @@
                                         <div class="mt-2">
                                             {% if session.teacher == user %}
                                                 <span class="text-sm text-gray-500">Learning with:</span>
-                                                <a href="{% url 'accounts:profile_view' session.learner.id %}" class="inline-flex items-center text-blue-600 hover:text-blue-800 ml-1">
+                                                <a href="{% url 'accounts:profile_details' session.learner.id %}" class="inline-flex items-center text-blue-600 hover:text-blue-800 ml-1">
                                                     <i class="fas fa-user mr-1"></i>
                                                     {{ session.learner.get_full_name|default:session.learner.username }}
                                                 </a>
                                             {% else %}
                                                 <span class="text-sm text-gray-500">Learning from:</span>
-                                                <a href="{% url 'accounts:profile_view' session.teacher.id %}" class="inline-flex items-center text-blue-600 hover:text-blue-800 ml-1">
+                                                <a href="{% url 'accounts:profile_details' session.teacher.id %}" class="inline-flex items-center text-blue-600 hover:text-blue-800 ml-1">
                                                     <i class="fas fa-user mr-1"></i>
                                                     {{ session.teacher.get_full_name|default:session.teacher.username }}
                                                 </a>
@@ -140,13 +140,13 @@
                                         <div class="mt-2">
                                             {% if session.teacher == user %}
                                                 <span class="text-sm text-gray-500">Learning with:</span>
-                                                <a href="{% url 'accounts:profile_view' session.learner.id %}" class="inline-flex items-center text-blue-600 hover:text-blue-800 ml-1">
+                                                <a href="{% url 'accounts:profile_details' session.learner.id %}" class="inline-flex items-center text-blue-600 hover:text-blue-800 ml-1">
                                                     <i class="fas fa-user mr-1"></i>
                                                     {{ session.learner.get_full_name|default:session.learner.username }}
                                                 </a>
                                             {% else %}
                                                 <span class="text-sm text-gray-500">Learning from:</span>
-                                                <a href="{% url 'accounts:profile_view' session.teacher.id %}" class="inline-flex items-center text-blue-600 hover:text-blue-800 ml-1">
+                                                <a href="{% url 'accounts:profile_details' session.teacher.id %}" class="inline-flex items-center text-blue-600 hover:text-blue-800 ml-1">
                                                     <i class="fas fa-user mr-1"></i>
                                                     {{ session.teacher.get_full_name|default:session.teacher.username }}
                                                 </a>
