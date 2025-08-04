@@ -375,6 +375,10 @@
                                                         <i class="fas fa-clock mr-2"></i>Upcoming
                                                     </span>
                                                 {% endif %}
+                                                <button class="px-6 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition duration-200 font-semibold"
+                                                        onclick="endSession({{ session.id }})">
+                                                    <i class="fas fa-stop mr-2"></i>End Meeting
+                                                </button>
                                             {% else %}
                                                 {% if session.is_upcoming %}
                                                     <span class="px-6 py-2 bg-blue-100 text-blue-800 rounded-lg text-center font-semibold">
@@ -383,10 +387,7 @@
                                                 {% endif %}
                                             {% endif %}
                                             
-                                            <button class="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition duration-200 font-semibold"
-                                                    onclick="cancelSession({{ session.id }})">
-                                                <i class="fas fa-times mr-2"></i>Cancel Session
-                                            </button>
+
                                         {% endif %}
                                         
                                         <a href="{% url 'skill_sessions:session_detail' session.id %}" 
@@ -638,6 +639,30 @@ function startSession(sessionId) {
             showNotification(data.error || 'Cannot start session yet', 'error');
         }
     });
+}
+
+function endSession(sessionId) {
+    if (confirm('Are you sure you want to end this session?')) {
+        fetch(`/sessions/${sessionId}/end/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification(data.message || 'Session ended successfully', 'success');
+                location.reload();
+            } else {
+                showNotification(data.error || 'Cannot end session', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('An error occurred while ending the session', 'error');
+        });
+    }
 }
 
 function cancelSession(sessionId) {
